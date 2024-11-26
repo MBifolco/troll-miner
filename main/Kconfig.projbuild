@@ -45,3 +45,52 @@ menu "WiFi Configuration"
     endchoice
 
 endmenu
+
+menu "Pool Configuration"
+    config POOL_PRIMARY_URL
+        string "Primary POOL Address"
+        default "nyc.kano.is"
+        help
+            The example will connect to this POOL pool address.
+
+    config POOL_PRIMARY_PORT
+        int "Primary POOL Port"
+        range 0 65535
+        default 3333
+        help
+            The POOL server port to connect to.
+
+    config POOL_FALLBACK_URL
+        string "Fallback POOL Address"
+        default "nyc.kano.is"
+        help
+            The example will connect to this POOL pool address if the primary fails.
+
+    config FALLBACK_POOL_PORT
+        int "Fallback POOL Port"
+        range 0 65535
+        default 3333
+        help
+            The POOL server port to connect to if the primary fails.
+
+    config POOL_USER
+        string "POOL username"
+        default "replace-this-with-your-btc-address.bitaxe"
+        help
+            POOL user to use with pool
+
+    config POOL_PW
+        string "POOL password"
+        default "x"
+        help
+            POOL password to use with pool
+
+    config POOL_DIFFICULTY
+        int "POOL default difficulty"
+        range 0 4294967296
+        default 1000
+        help
+            A starting difficulty to use with the pool.
+    
+
+endmenu
