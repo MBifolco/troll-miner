@@ -27,7 +27,7 @@ We Mine Trolls
 [Kano](https://github.com/kanoi), [Skot](https://github.com/skot) and othes for their work on [cgminer](https://github.com/kanoi/cgminer) and [esp-miner](https://github.com/skot/ESP-Miner) from which we borrow very very heavily.
 
 # Why Troll Miner
-Troll miner is a project to build esp32 firmware to allow transparent exploration of managing asic miners as efficiently as possible.
+Troll miner is a project to build esp32 firmware that allows for transparent exploration of how to manage asics as efficiently as possible specifically using the esp32 chip.
 
 # Gettin Started
 You should be familiar with compiling and flashing esp32 firmware.
