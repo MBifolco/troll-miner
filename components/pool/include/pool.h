@@ -13,4 +13,7 @@ int pool_send(const char *message);
 // Persistent task for managing the pool connection
 void pool_task();
 
+// Function to get version rolling info from pool
+int configure_version_rolling();
+
 #endif // POOL_COMPONENT_H
