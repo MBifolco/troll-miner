@@ -13,7 +13,8 @@ static const char *TAG = "Pool";
 static int pool_socket = -1;
 static EventGroupHandle_t pool_event_group;
 static const int POOL_CONNECTED_BIT = BIT0;
-
+// set incrementable message id
+static int message_id = 1;
 // Function to connect to the pool
 static int pool_connect() {
     ESP_LOGI(TAG, "Connecting to pool at %s:%d", CONFIG_POOL_PRIMARY_URL, CONFIG_POOL_PRIMARY_PORT);
@@ -55,6 +56,9 @@ static int pool_connect() {
 
     ESP_LOGI(TAG, "Connected to pool");
     xEventGroupSetBits(pool_event_group, POOL_CONNECTED_BIT);
+
+    // configure version rolling
+    configure_version_rolling();
     return 0;
 }
 
@@ -138,9 +142,25 @@ int pool_send(const char *message) {
     if (bytes_sent < 0) {
         ESP_LOGE(TAG, "Failed to send message");
     } else {
+        // Increment message id
+        message_id++;
         ESP_LOGI(TAG, "Sent message: %s", message);
     }
     return bytes_sent;
+}
+
+int configure_version_rolling() {
+    // Example: Send a version rolling message
+    //const char *version_rolling_msg = "{\"id\": %d, \"method\": \"mining.configure\", \"params\": [{\"version-rolling.mask\": \"0x0000000f\", \"version-rolling.min-difficulty\": 1, \"version-rolling.max-difficulty\": 1, \"version-rolling.threshold\": 1}]}\n";
+    char version_rolling_msg[1024];
+    sprintf(version_rolling_msg,
+            "{\"id\": %d, "
+            "\"method\": \"mining.configure\", "
+            "\"params\": [[\"version-rolling\"], {\"version-rolling.mask\": \"ffffffff\"}]}\n",
+            message_id);
+    
+    
+    return pool_send(version_rolling_msg);
 }
 
 // Persistent task for managing the pool connection
