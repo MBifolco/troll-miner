@@ -29,7 +29,7 @@ We Mine Trolls
 # Why Troll Miner
 Troll miner is a project to build esp32 firmware that allows for transparent exploration of how to manage asics as efficiently as possible specifically using the esp32 chip.
 
-# Gettin Started
+# Getting Started
 You should be familiar with compiling and flashing esp32 firmware.
 
 First you need to know some key information:
