@@ -16,4 +16,8 @@ void pool_task();
 // Function to get version rolling info from pool
 int configure_version_rolling();
 
+// Function to subscribe to pool messages
+int subscribe_to_pool();
+
+
 #endif // POOL_COMPONENT_H

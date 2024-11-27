@@ -59,6 +59,10 @@ static int pool_connect() {
 
     // configure version rolling
     configure_version_rolling();
+
+    // subscribe to pool
+    subscribe_to_pool();
+    
     return 0;
 }
 
@@ -163,6 +167,13 @@ int configure_version_rolling() {
     return pool_send(version_rolling_msg);
 }
 
+int subscribe_to_pool() {
+    // Example: Send a subscription message
+    //const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
+    char subscribe_msg[1024];
+    sprintf(subscribe_msg, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\"trollminer\"]}\n", message_id);
+    return pool_send(subscribe_msg);
+}
 // Persistent task for managing the pool connection
 void pool_task() {
     char buffer[512];
