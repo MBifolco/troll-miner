@@ -79,12 +79,20 @@ static int pool_receive(char *buffer, size_t buffer_len) {
     }
 
     int bytes_received = recv(pool_socket, buffer, buffer_len - 1, 0);
+    
     if (bytes_received < 0) {
         ESP_LOGE(TAG, "Failed to receive data");
     } else if (bytes_received == 0) {
         ESP_LOGE(TAG, "Pool connection closed by server");
         return -1; // Connection closed
     } else {
+        //struct timespec ts;
+        //clock_gettime(CLOCK_REALTIME, &ts);
+
+        // Calculate milliseconds
+        //long long int milliseconds = (long long int)ts.tv_sec * 1000 + (ts.tv_nsec / 1000000);
+        //printf("Current time: %lld milliseconds since the Epoch\n", milliseconds);
+
         buffer[bytes_received] = '\0'; // Null-terminate the string
         ESP_LOGI(TAG, "Received message: %s", buffer);
     }
@@ -198,7 +206,7 @@ int suggest_difficulty() {
 // Persistent task for managing the pool connection
 void pool_task() {
     char buffer[512];
-
+    
     while (true) {
         if (pool_socket < 0) {
             ESP_LOGI(TAG, "Attempting to connect to pool...");

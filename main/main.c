@@ -1,5 +1,6 @@
 #include "wifi_connection.h"
 #include "pool.h"
+//#include "ntp-time.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -9,6 +10,9 @@ void app_main() {
 
     // Wait for connection
     wifi_wait_for_connection();
+
+    // Obtain the current time
+    //obtain_time();
 
     // Initialize the pool component
     pool_init();
