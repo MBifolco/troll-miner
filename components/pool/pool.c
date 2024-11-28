@@ -205,7 +205,7 @@ int suggest_difficulty() {
 }
 // Persistent task for managing the pool connection
 void pool_task() {
-    char buffer[512];
+    char *buffer = malloc(2048);
     
     while (true) {
         if (pool_socket < 0) {
@@ -224,11 +224,13 @@ void pool_task() {
         }
 
         // Listen for data
-        int bytes_received = pool_receive(buffer, sizeof(buffer));
+        int bytes_received = pool_receive(buffer, 2048);
         if (bytes_received < 0) {
             ESP_LOGE(TAG, "Connection lost. Reconnecting...");
             pool_disconnect();
             vTaskDelay(pdMS_TO_TICKS(5000)); // Wait before retrying
         }
     }
+    free(buffer);
+    vTaskDelete(NULL);
 }
