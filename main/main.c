@@ -23,7 +23,7 @@ void app_main() {
         "PoolTask",
         4096,
         NULL,
-        5,
+        configMAX_PRIORITIES - 1,
         NULL
     );
 }
