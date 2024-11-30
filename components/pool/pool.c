@@ -13,7 +13,8 @@ static const char *TAG = "Pool";
 static int pool_socket = -1;
 static EventGroupHandle_t pool_event_group;
 static const int POOL_CONNECTED_BIT = BIT0;
-
+// set incrementable message id
+static int message_id = 1;
 // Function to connect to the pool
 static int pool_connect() {
     ESP_LOGI(TAG, "Connecting to pool at %s:%d", CONFIG_POOL_PRIMARY_URL, CONFIG_POOL_PRIMARY_PORT);
@@ -55,6 +56,18 @@ static int pool_connect() {
 
     ESP_LOGI(TAG, "Connected to pool");
     xEventGroupSetBits(pool_event_group, POOL_CONNECTED_BIT);
+
+    // configure version rolling
+    configure_version_rolling();
+
+    // subscribe to pool
+    subscribe_to_pool();
+
+    // authenticate with pool
+    authenticate_with_pool();
+
+    // suggest difficulty
+    suggest_difficulty();
     return 0;
 }
 
@@ -138,11 +151,50 @@ int pool_send(const char *message) {
     if (bytes_sent < 0) {
         ESP_LOGE(TAG, "Failed to send message");
     } else {
+        // Increment message id
+        message_id++;
         ESP_LOGI(TAG, "Sent message: %s", message);
     }
     return bytes_sent;
 }
 
+int configure_version_rolling() {
+    // Example: Send a version rolling message
+    //const char *version_rolling_msg = "{\"id\": %d, \"method\": \"mining.configure\", \"params\": [{\"version-rolling.mask\": \"0x0000000f\", \"version-rolling.min-difficulty\": 1, \"version-rolling.max-difficulty\": 1, \"version-rolling.threshold\": 1}]}\n";
+    char version_rolling_msg[1024];
+    sprintf(version_rolling_msg,
+            "{\"id\": %d, "
+            "\"method\": \"mining.configure\", "
+            "\"params\": [[\"version-rolling\"], {\"version-rolling.mask\": \"ffffffff\"}]}\n",
+            message_id);
+    
+    
+    return pool_send(version_rolling_msg);
+}
+
+int subscribe_to_pool() {
+    // Example: Send a subscription message
+    //const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
+    char subscribe_msg[1024];
+    sprintf(subscribe_msg, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\"trollminer\"]}\n", message_id);
+    return pool_send(subscribe_msg);
+}
+
+int authenticate_with_pool() {
+    // Example: Send an authentication message
+    //const char *auth_msg = "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"username\", \"password\"]}\n";
+    char auth_msg[1024];
+    sprintf(auth_msg, "{\"id\": %d, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}\n", message_id, CONFIG_POOL_USER, CONFIG_POOL_PW);
+    return pool_send(auth_msg);
+}
+
+int suggest_difficulty() {
+    // Example: Send a difficulty suggestion message
+    //const char *suggest_difficulty_msg = "{\"id\": 3, \"method\": \"mining.suggest_difficulty\", \"params\": [1]}\n";
+    char suggest_difficulty_msg[1024];
+    sprintf(suggest_difficulty_msg, "{\"id\": %d, \"method\": \"mining.suggest_difficulty\", \"params\": [1000]}\n", message_id);
+    return pool_send(suggest_difficulty_msg);
+}
 // Persistent task for managing the pool connection
 void pool_task() {
     char buffer[512];
