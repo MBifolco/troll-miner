@@ -1,4 +1,5 @@
 #include "pool.h"
+#include "stratum_message.h"
 #include "esp_log.h"
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
@@ -87,6 +88,7 @@ static int pool_receive(char *buffer, size_t buffer_len) {
     } else {
         buffer[bytes_received] = '\0'; // Null-terminate the string
         ESP_LOGI(TAG, "Received message: %s", buffer);
+        process_stratum_message(buffer);
     }
     return bytes_received;
 }
