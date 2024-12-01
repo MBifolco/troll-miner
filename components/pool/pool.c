@@ -89,7 +89,7 @@ static int pool_receive(char *buffer, size_t buffer_len) {
     } else {
         buffer[bytes_received] = '\0'; // Null-terminate the string
         ESP_LOGI(TAG, "Received message: %s", buffer);
-        process_stratum_message(buffer);
+        process_message(buffer);
     }
     return bytes_received;
 }
