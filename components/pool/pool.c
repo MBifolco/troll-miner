@@ -79,6 +79,7 @@ static int pool_receive(char *buffer, size_t buffer_len) {
         return -1;
     }
 
+    // in esp-miner they allocate butter dynamically - STRATUM_V1_initialize_buffer
     int bytes_received = recv(pool_socket, buffer, buffer_len - 1, 0);
     if (bytes_received < 0) {
         ESP_LOGE(TAG, "Failed to receive data");

@@ -14,3 +14,4 @@ void process_stratum_message(const char *message) {
     ESP_LOGI("STRATUM", "Received message: %s", message);
     receive_stratum_message(message);
 }
+
