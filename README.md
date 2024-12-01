@@ -57,10 +57,10 @@ From inside this project's directory:
     - Set your backup pool port (e.g.  80)
   - Hit 's' to save
   - Leave menuconfig
- 
+
 ## 3. Build Firmware
 From inside this project's directory:
- - If you've attempted to build this firmware before run `idf.py fullclean` (or any time you change the configs and in generalas a first troubshooting effort)
+ - If you've attempted to build this firmware before run `idf.py fullclean` (or any time you change the configs and in general as a first troubshooting effort)
  - Build the firmware run `idf.py build`
  - Flash the firmware run `idf.py flash`
  - Connect to your board to see how you did `idf.py monitor`
