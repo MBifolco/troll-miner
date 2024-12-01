@@ -95,10 +95,10 @@ void parse_request(cJSON * method_json)
     }
 
          
-    if (action >= 0 && action < NUM_ACTIONS) {
-        actionFunctions[action]();
+    if (message->method >= 0 && message->method < NUM_METHODS) {
+        methodHandlers[message->method]();
     } else {
-        printf("Invalid action!\n");
+        printf("Invalid method!\n");
     }
  
 }
