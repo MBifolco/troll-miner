@@ -1,0 +1,5 @@
+#ifndef JOB_COMPONENT_H
+#define JOB_COMPONENT_H
+
+
+#endif // JOB_COMPONENT_H

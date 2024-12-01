@@ -1,4 +1,5 @@
 #include "pool.h"
+#include "stratum_message.h"
 #include "esp_log.h"
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
@@ -73,6 +74,7 @@ static int pool_receive(char *buffer, size_t buffer_len) {
         return -1;
     }
 
+    // in esp-miner they allocate butter dynamically - STRATUM_V1_initialize_buffer
     int bytes_received = recv(pool_socket, buffer, buffer_len - 1, 0);
     if (bytes_received < 0) {
         ESP_LOGE(TAG, "Failed to receive data");
@@ -82,6 +84,7 @@ static int pool_receive(char *buffer, size_t buffer_len) {
     } else {
         buffer[bytes_received] = '\0'; // Null-terminate the string
         ESP_LOGI(TAG, "Received message: %s", buffer);
+        process_message(buffer);
     }
     return bytes_received;
 }
