@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "sdkconfig.h"
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <lwip/tcpip.h>
@@ -18,21 +19,8 @@ static int message_id = 1;
 // Function to connect to the pool
 static int pool_connect() {
     ESP_LOGI(TAG, "Connecting to pool at %s:%d", CONFIG_POOL_PRIMARY_URL, CONFIG_POOL_PRIMARY_PORT);
-
-    char host_ip[INET_ADDRSTRLEN] = "45.76.165.182";
-
-    //ESP_LOGI(TAG, "Resolving pool hostname...");
-    //struct hostent *primary_dns_addr = gethostbyname(CONFIG_POOL_PRIMARY_URL);
-    //if (primary_dns_addr == NULL) {
-    //    ESP_LOGD(TAG, "Heartbeat. Failed DNS check for: %s!", CONFIG_POOL_PRIMARY_URL);
-    //    return -1;
-    //}
-
-    //inet_ntop(AF_INET, (void *)primary_dns_addr->h_addr_list[0], host_ip, sizeof(host_ip));
-
-    //ESP_LOGI(TAG, "Pool IP address: %s", host_ip);
-
     ESP_LOGI(TAG, "Creating socket...");
+
     // Create a socket
     pool_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (pool_socket < 0) {
@@ -40,14 +28,21 @@ static int pool_connect() {
         return -1;
     }
 
+    struct hostent *server;
+    server = gethostbyname(CONFIG_POOL_PRIMARY_URL); // TODO: Rename to CONFIG_POOL_PRIMARY_HOST
+    if (server == NULL) {
+        ESP_LOGE(TAG, "Unable to gethostbyname(%s)", CONFIG_POOL_PRIMARY_URL);
+        return -1;
+    }
+
     // Set up the server address
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(CONFIG_POOL_PRIMARY_PORT);
-    server_addr.sin_addr.s_addr = inet_addr(host_ip);
+    server_addr.sin_addr = *((struct in_addr *)server->h_addr_list[0]);
 
     // Connect to the server
-    if (connect(pool_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (connect(pool_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         ESP_LOGE(TAG, "Failed to connect to pool");
         close(pool_socket);
         pool_socket = -1;
