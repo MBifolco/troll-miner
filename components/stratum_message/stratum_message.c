@@ -31,7 +31,8 @@ void process_message(const char *message_json)
 Functions only for processing stratum messages: On same ESP32 as pool connection
 */
 
-void process_mining_notify(){
+void process_mining_notify()
+{
     mining_notify * new_work = malloc(sizeof(mining_notify));
     
     cJSON * params = cJSON_GetObjectItem(json, "params");
@@ -63,20 +64,23 @@ void process_mining_notify(){
     message->should_abandon_work = value;
 }
 
-void process_mining_set_difficulty(){
+void process_mining_set_difficulty()
+{
     cJSON * params = cJSON_GetObjectItem(json, "params");
     uint32_t difficulty = cJSON_GetArrayItem(params, 0)->valueint;
 
     message->new_difficulty = difficulty;
 }
 
-void process_mining_set_version_mask(){
+void process_mining_set_version_mask()
+{
     cJSON * params = cJSON_GetObjectItem(json, "params");
     uint32_t version_mask = strtoul(cJSON_GetArrayItem(params, 0)->valuestring, NULL, 16);
     message->version_mask = version_mask;
 }
 
 void parse_request(cJSON * method_json)
+{
     if (cJSON_IsString(method_json)) {
         if (strcmp(method_json->valuestring, "mining.notify") == 0) {
             message->method = MINING_NOTIFY;
@@ -177,6 +181,17 @@ void parse_message(const char * message_json)
         ESP_LOGE(TAG, "Error parsing JSON: %s", message_json);
         return;
     }
+
+    /*
+    suggested new flow
+    1. parse method
+    2. if method isn't null create a request object
+    3. if method is null create a response object
+    4. parse id
+    5. if request - parse request
+    6. if response - check for error
+    7. if no error parse result
+    */
 
     // parse id 
     // TODO what happens if no id?
