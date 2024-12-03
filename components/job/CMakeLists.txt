@@ -1,8 +1,10 @@
 idf_component_register(
 SRCS
-    "stratum_messages.c"
+    "job.c"
 
 INCLUDE_DIRS 
     "include"
-    "../../main"
+
+REQUIRES
+    "json"
 )

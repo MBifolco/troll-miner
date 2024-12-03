@@ -57,24 +57,18 @@ typedef struct
     char *error_code; //number or string
     char *message;
     char *data; // optional and specified as 'object'
-} response_error;
+} parased_stratum_server_response_message_error;
 
 typedef struct
 {
-    /*
-    should this also have the id and method declared?
-    */
     char *job_id; //The job ID for the job being sent in this message.
     char *prev_block_hash; //The hex-encoded previous block hash.
     char *coinbase_prefix; //The hex-encoded prefix of the coinbase transaction (to precede extra nonce 2).
     char *coinbase_suffix; //The hex-encoded suffix of the coinbase transaction (to follow extra nonce 2).
     uint8_t *merkle_branches; //A JSON array containing the hex-encoded hashes needed to compute the merkle root. See Merkle Tree Hash Array.
-    size_t n_merkle_branches; // ??
-    uint32_t version; //The hex-encoded block version.
-    uint32_t version_mask; // ??
-    uint32_t target; //The hex-encoded network difficulty required for the block.
+    uint32_t block_version; //The hex-encoded block version.
+    uint32_t network_difficulty; //The hex-encoded network difficulty required for the block.
     uint32_t ntime; //The hex-encoded current time for the block.
-    uint32_t difficulty; // ??
 } mining_notify;
 
 typedef struct
@@ -87,20 +81,6 @@ typedef struct
     uint32_t version_mask;  // not sure what this is yet
 } mining_set_version_mask;
 
-/*
-typedef struct
-{
-    char * extranonce_str;
-    int extranonce_2_len;
-    int64_t message_id;
-    stratum_server_request_method method;
-    int should_abandon_work;
-    mining_notify *mining_notification;
-    uint32_t new_difficulty;
-    uint32_t version_mask;
-    bool response_success;
-} mining_notification_message;
-*/
 
 
 void process_message(const char *message);
