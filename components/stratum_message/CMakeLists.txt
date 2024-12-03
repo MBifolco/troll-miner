@@ -1,10 +1,10 @@
 idf_component_register(
 SRCS
-    "pool.c"
+    "stratum_message.c"
 
 INCLUDE_DIRS 
     "include"
-    "../stratum_message/include"
+    "../job/include"
 
 REQUIRES
     "json"
