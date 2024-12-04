@@ -27,15 +27,16 @@
       "674320f700005d59",
 
       // params[1] - previous block hash (little-endian)
-      "50120119172a610421a6c3011dd330d9df07b63616c2cc1f1cd0020000000000",
+      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c8604",
 
-      // TODO: reverse engineer this from block 100,000
+      // params [2] & [3] were decomposed from the coinbase tx of block 100,000 - https://mempool.space/api/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87/hex
       // params [2] - prefix of the coinbase transaction (to precede extra nonce 2).
       "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff3603ee510d00042beb4d6704572cd7040c",
 
-      // TODO: reverse engineer this from block 100,000
+      // NOTE: extra nonce 2 for coinbase tx of block 100,000 = 1b020602 (little-endian)
+
       // params [3] - suffix of the coinbase transaction (to follow extra nonce 2).
-      "0a2ef09f90882e12204b616e6f506f6f6c20283d4f2e4f3d2920ffffffff0260660113000000001976a9148375f59e2771fe785cc069654fed5242223ecd5088ac0000000000000000266a24aa21a9ed32b3c03125272915a4c69c04b57f6b0afe11242545d5293c3a3c75b2782c101d00000000",
+      "ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000",
 
       // params[4] - array of merkle branches (these are the actual block 100,000 tx IDs, but reversed to little-endian, just like the merkle branches would be).
       [
