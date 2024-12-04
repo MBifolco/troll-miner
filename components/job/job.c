@@ -2,7 +2,7 @@
 #include "esp_log.h"
 static const char *TAG = "JOB";
 
-void process_mining_notify(mining_notify * mining_notify)
+void mining_job_task()
 {
-    
+    ESP_LOGI(TAG, "Mining job task started");
 }

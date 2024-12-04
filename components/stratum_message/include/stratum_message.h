@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MAX_MERKLE_BRANCHES 32
+#define HASH_SIZE 32
+#define COINBASE_SIZE 100
+#define COINBASE2_SIZE 128
 
 // docs on reqeusts and responses, methods and results 
 // https://reference.cash/mining/stratum-protocol
@@ -14,16 +18,6 @@ typedef enum
     MINING_SET_VERSION_MASK,
     NUM_METHODS
 } stratum_server_request_method;
-
-typedef enum
-{
-    CLIENT_RECONNECT
-    STRATUM_RESULT,
-    STRATUM_RESULT_SETUP,
-    STRATUM_RESULT_VERSION_MASK,
-    STRATUM_RESULT_SUBSCRIBE,
-    NUM_RESULTS
-} stratum_server_response_result;
 
 // error code mapping
 // https://reference.cash/mining/stratum-protocol#error-codes

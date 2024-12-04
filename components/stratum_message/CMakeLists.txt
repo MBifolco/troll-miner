@@ -5,6 +5,7 @@ SRCS
 INCLUDE_DIRS 
     "include"
     "../job/include"
+    "../utils/include"
 
 REQUIRES
     "json"

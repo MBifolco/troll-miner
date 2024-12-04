@@ -1,7 +1,10 @@
 #include "stratum_message.h"
 #include "esp_log.h"
 #include "job.h"
-
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include "utils.h"
 static const char *TAG = "JOB";
 
 void (*methodHandlers[NUM_METHODS])() = {
@@ -40,23 +43,25 @@ void process_mining_notify(cJSON * json )
     mining_notify->coinbase_prefix = strdup(cJSON_GetArrayItem(params, 2)->valuestring);
     mining_notify->coinbase_suffix = strdup(cJSON_GetArrayItem(params, 3)->valuestring);
 
+    
     // set merkle branches
     cJSON * merkle_branch = cJSON_GetArrayItem(params, 4);
-    mining_notify->n_merkle_branches = cJSON_GetArraySize(merkle_branch);
-    if (mining_notify->n_merkle_branches > MAX_MERKLE_BRANCHES) {
+    size_t n_merkle_branches = 0;
+    n_merkle_branches = cJSON_GetArraySize(merkle_branch);
+    if (n_merkle_branches > MAX_MERKLE_BRANCHES) {
         printf("Too many Merkle branches.\n");
         abort();
     }
-    mining_notify->merkle_branches = malloc(HASH_SIZE * mining_notify->n_merkle_branches);
-    for (size_t i = 0; i < mining_notify->n_merkle_branches; i++) {
+    mining_notify->merkle_branches = malloc(HASH_SIZE * n_merkle_branches);
+    for (size_t i = 0; i < n_merkle_branches; i++) {
         hex2bin(cJSON_GetArrayItem(merkle_branch, i)->valuestring, mining_notify->merkle_branches + HASH_SIZE * i, HASH_SIZE * 2);
     }
-
+    
     // set block version
-    mining_notify->version = strtoul(cJSON_GetArrayItem(params, 5)->valuestring, NULL, 16);
+    mining_notify->block_version = strtoul(cJSON_GetArrayItem(params, 5)->valuestring, NULL, 16);
 
     // set network difficulty
-    mining_notify->target = strtoul(cJSON_GetArrayItem(params, 6)->valuestring, NULL, 16);
+    mining_notify->network_difficulty = strtoul(cJSON_GetArrayItem(params, 6)->valuestring, NULL, 16);
 
     // set ntime
     mining_notify->ntime = strtoul(cJSON_GetArrayItem(params, 7)->valuestring, NULL, 16);
@@ -68,8 +73,8 @@ void process_mining_notify(cJSON * json )
     //int value = cJSON_IsTrue(cJSON_GetArrayItem(params, paramsLength - 1));
     //message->should_abandon_work = value;
 
-    process_mining_notify(mining_notify);
-
+    //process_mining_notify(mining_notify);
+    
     free(mining_notify);
 }
 
@@ -103,14 +108,18 @@ int parase_server_message_id(cJSON * json)
 
 void parse_server_request(cJSON * json)
 {
+    cJSON * method_json = cJSON_GetObjectItem(json, "method");
+    stratum_server_request_method method = -1;
     // it smells to me like there is something redundant here
     if (cJSON_IsString(method_json)) {
-        if (strcmp(method_json->valuestring, "mining.notify") == 0) {
-            message->method = MINING_NOTIFY;
-        } else if (strcmp(method_json->valuestring, "mining.set_difficulty") == 0) {
-            message->method = MINING_SET_DIFFICULTY;
-        } else if (strcmp(method_json->valuestring, "mining.set_version_mask") == 0) {
-            message->method = MINING_SET_VERSION_MASK;
+        char * method_str = method_json->valuestring;
+
+        if (strcmp(method_str, "mining.notify") == 0) {
+            method = MINING_NOTIFY;
+        } else if (strcmp(method_str, "mining.set_difficulty") == 0) {
+            method = MINING_SET_DIFFICULTY;
+        } else if (strcmp(method_str, "mining.set_version_mask") == 0) {
+            method = MINING_SET_VERSION_MASK;
         } else {
             ESP_LOGI(TAG, "unhandled method in stratum message: %s", method_json->valuestring);
             // should this return error?
@@ -120,8 +129,8 @@ void parse_server_request(cJSON * json)
         // should this return error?
     }
          
-    if (message->method >= 0 && message->method < NUM_METHODS) {
-        methodHandlers[message->method](json);
+    if (method >= 0 && method < NUM_METHODS) {
+        methodHandlers[method](json);
     } else {
         printf("Invalid method!\n");
     }
@@ -131,73 +140,7 @@ void parse_server_request(cJSON * json)
 
 void parse_server_response(stratum_server_request_message * json)
 {
-    /*
-    cJSON * result_json = cJSON_GetObjectItem(json, "result");
-    cJSON * error_json = cJSON_GetObjectItem(json, "error");
-
-    //Result is null - error
-    if (result_json == NULL) {
-        message->response_success = false;
-
-    //Error sent - error
-    } else if (!cJSON_IsNull(error_json)) {
-        if (parsed_id < 5) {
-            result = STRATUM_RESULT_SETUP;
-        } else {
-            result = STRATUM_RESULT;
-        }
-        message->response_success = false;
-
-    //if the result is a boolean, then parse it
-    } else if (cJSON_IsBool(result_json)) {
-        // if the id is less than 5 it was one of the set up ids
-        if (parsed_id < 5) {
-            result = STRATUM_RESULT_SETUP;
-        } else {
-            result = STRATUM_RESULT;
-        }
-        if (cJSON_IsTrue(result_json)) {
-            message->response_success = true;
-        } else {
-            message->response_success = false;
-        }
-    
-    //if the id is STRATUM_ID_SUBSCRIBE parse it
-    } else if (parsed_id == STRATUM_ID_SUBSCRIBE) {
-        result = STRATUM_RESULT_SUBSCRIBE;
-
-        cJSON * extranonce2_len_json = cJSON_GetArrayItem(result_json, 2);
-        if (extranonce2_len_json == NULL) {
-            ESP_LOGE(TAG, "Unable to parse extranonce2_len: %s", result_json->valuestring);
-            message->response_success = false;
-            goto done;
-        }
-        message->extranonce_2_len = extranonce2_len_json->valueint;
-
-        cJSON * extranonce_json = cJSON_GetArrayItem(result_json, 1);
-        if (extranonce_json == NULL) {
-            ESP_LOGE(TAG, "Unable parse extranonce: %s", result_json->valuestring);
-            message->response_success = false;
-            goto done;
-        }
-        message->extranonce_str = malloc(strlen(extranonce_json->valuestring) + 1);
-        strcpy(message->extranonce_str, extranonce_json->valuestring);
-        message->response_success = true;
-
-    //if the id is STRATUM_ID_CONFIGURE parse it
-    } else if (parsed_id == STRATUM_ID_CONFIGURE) {
-        cJSON * mask = cJSON_GetObjectItem(result_json, "version-rolling.mask");
-        if (mask != NULL) {
-            result = STRATUM_RESULT_VERSION_MASK;
-            message->version_mask = strtoul(mask->valuestring, NULL, 16);
-        } else {
-            ESP_LOGI(TAG, "error setting version mask: %s", stratum_json);
-        }
-
-    } else {
-        ESP_LOGI(TAG, "unhandled result in stratum message: %s", stratum_json);
-    }
-    */
+   ESP_LOGI(TAG, "parse server response");
 }
 
 void parse_message(const char * message_json)
@@ -217,7 +160,7 @@ void parse_message(const char * message_json)
         parse_server_request(method_json);
     //if none then it's a server response with a result or error
     } else {
-        parse_server_response(json)
+        parse_server_response(json);
     }
 
     /*
@@ -232,6 +175,6 @@ void parse_message(const char * message_json)
     */
 
     // whats this?
-    done:
+    //done:
     cJSON_Delete(json);
 }

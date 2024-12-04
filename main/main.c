@@ -2,6 +2,7 @@
 #include "pool.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "job.h"
 
 void app_main() {
     // Initialize Wi-Fi
@@ -17,6 +18,14 @@ void app_main() {
     xTaskCreate(
         (TaskFunction_t)pool_task,
         "PoolTask",
+        4096,
+        NULL,
+        5,
+        NULL
+    );
+    xTaskCreate(
+        (TaskFunction_t)pool_task,
+        "mining_job_task",
         4096,
         NULL,
         5,
