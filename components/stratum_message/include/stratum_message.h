@@ -30,7 +30,7 @@ typedef enum
     UNAUTHRIZED_WORKER = 24,
     NOT_SUBSCRIBED = 25,
     NUM_ERRORS
-} response_error_code;
+} stratum_server_response_to_client_request_error_code;
 
 typedef struct
 {
@@ -51,7 +51,7 @@ typedef struct
     char *error_code; //number or string
     char *message;
     char *data; // optional and specified as 'object'
-} parased_stratum_server_response_message_error;
+} parsed_stratum_server_response_message_error;
 
 typedef struct
 {
