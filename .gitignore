@@ -53,3 +53,7 @@ dkms.conf
 
 # build directory
 build/
+*.code-workspace
+.vscode/
+.cache/*
+sdkconfig*
