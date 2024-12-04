@@ -1,3 +1,7 @@
+/*
+Thanks you to the author of the original code:
+https://github.com/skot/ESP-Miner/blob/master/components/stratum/utils.c
+*/
 #include "utils.h"
 
 #include <string.h>
