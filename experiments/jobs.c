@@ -59,6 +59,7 @@
       H1 H2  H3 H4
 
       We only need [H2, H34] to reach the root. So the second element is the double_sha of tx3 & tx4 concatenated.
+      NOTE: H2 is actually reversed (because it's usually little-endian). See: https://medium.com/@stolman.b/1-4-hashing-transactions-txids-to-find-the-merkle-root-3aa5255f8de8
       // params[4] - array of merkle branches (big-endian).
       [
          "c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff",
