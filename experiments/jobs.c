@@ -18,6 +18,17 @@
         'difficulty': 14484.162361225399
    }
  *
+
+    Field	        Received Format	    Usage in Block Header
+    -----           ---------------     ---------------------
+    prevhash	    Big-endian	        Little-endian
+    coinbase1	    Hex string	        Used as-is
+    coinbase2	    Hex string	        Used as-is
+    merkle_branch	Big-endian	        Big-endian (for Merkle root calculation)
+    version	        Big-endian	        Little-endian
+    nbits	        Big-endian	        Big-endian
+    ntime	        Big-endian	        Little-endian
+
  * Sample job message, for block 100,000
  * {
    "id" : null,
@@ -26,34 +37,42 @@
       // params[0] - job id
       "674320f700005d59",
 
-      // params[1] - previous block hash (little-endian)
-      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c8604",
+      // params[1] - previous block hash (big-endian)
+      "000000000002d01c1fccc21636b607dfd930d31d01c3a62104612a1719011250",
 
       // params [2] & [3] were decomposed from the coinbase tx of block 100,000 - https://mempool.space/api/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87/hex
       // params [2] - prefix of the coinbase transaction (to precede extra nonce 2).
-      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff3603ee510d00042beb4d6704572cd7040c",
+      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c8604",
 
-      // NOTE: extra nonce 2 for coinbase tx of block 100,000 = 1b020602 (little-endian)
+      // NOTE: extra nonce 2 for coinbase tx of block 100,000 = 1b020602 (like coinbase1 & coinbase2, endianess does not apply)
 
       // params [3] - suffix of the coinbase transaction (to follow extra nonce 2).
       "ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000",
 
-      // params[4] - array of merkle branches (these are the actual block 100,000 tx IDs, but reversed to little-endian, just like the merkle branches would be).
+      // NOTE: How did I come up with these merkle branches when block 100,000 had 4 transactions?
+      // 1) The first transaction we'll compute from double_sha of coinbase1_extranonce2_coinbase2
+      // 2) Generally mining.notify sends branches that would require the smallest number of computations. So given txs [TX1 (coinbase), TX2, TX3, TX4] yields
+          Root
+         /    \
+       H12    H34
+       / \    / \
+      H1 H2  H3 H4
+
+      We only need [H2, H34] to reach the root. So the second element is the double_sha of tx3 & tx4 concatenated.
+      // params[4] - array of merkle branches (big-endian).
       [
-         '876dd0a3ef4a2816ffd1c12ab649825a958b0ff3bb3d6f3e1250f13ddbf0148c',
-         'c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff',
-         'c46e239ab7d28e2c019b6d66ad8fae98a56ef1f21aeecb94d1b1718186f05963',
-         '1d0cb83721529a062d9675b98d6e5c587e4a770fc84ed00abc5a5de04568a6e9'
+         "c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff",
+         "49aef42d78e3e9999c9e6ec9e1dddd6cb880bf3b076a03be1318ca789089308e"
       ],
 
-      // params[5] - version (little-endian)
-      "10000000",
+      // params[5] - version (big-endian)
+      "00000001",
 
-      // params[6] - difficulty ("bits" field of block header - this is an encoding: https://developer.bitcoin.org/reference/block_chain.html#target-nbits)
-      "1b04864c",
+      // params[6] - difficulty ("bits" field of block header; big-endian; this is an encoding: https://developer.bitcoin.org/reference/block_chain.html#target-nbits)
+      "4c86041b",
 
-      // params[7] - current time for the block (little-endian - byte reversed result of timestamp: byte_flip(hex(1293623863)[2:]))
-      "37221b4d",
+      // params[7] - current time for the block (big-endian - hex(1293623863)[2:])
+      "4d1b2237",
       true
    ]
 }
@@ -66,41 +85,6 @@
 #include <stdbool.h>
 #include "jobs.h"
 
-/**
- * Pulled from https://github.com/kanoi/cgminer/blob/e8d49a56163419fedca385e61abf88d55d8cc30d/util.c#L880C1-L929C2
- */
-bool hex2bin(unsigned char *p, const char *hexstr, size_t len)
-{
-    int nibble1, nibble2;
-    unsigned char idx;
-    bool ret = false;
-
-    while (*hexstr && len)
-    {
-        if (unlikely(!hexstr[1]))
-        {
-            return ret;
-        }
-
-        idx = *hexstr++;
-        nibble1 = hex2bin_tbl[idx];
-        idx = *hexstr++;
-        nibble2 = hex2bin_tbl[idx];
-
-        if (unlikely((nibble1 < 0) || (nibble2 < 0)))
-        {
-            return ret;
-        }
-
-        *p++ = (((unsigned char)nibble1) << 4) | ((unsigned char)nibble2);
-        --len;
-    }
-
-    if (likely(len == 0 && *hexstr == 0))
-        ret = true;
-    return ret;
-}
-
 struct job
 {
     int merkle_branches_n;
@@ -110,31 +94,34 @@ struct job
 
 int main()
 {
-    // 64 characters is 32 bytes
+    // 64 character hex strings ===> 32 bytes
     char input_merkle_branches[4][64] = {
-        "8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87",
-        "fff2525b8931402dd09222c50775608f75787bd2b87e56995a7bdd30f79702c4",
-        "6359f0868171b1d194cbee1af2f16ea598ae8fad666d9b012c8ed2b79a236ec4",
-        "e9a66845e05d5abc0ad04ec80f774a7e585c6e8db975962d069a522137b80c1d"};
+        "c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff",
+        "49aef42d78e3e9999c9e6ec9e1dddd6cb880bf3b076a03be1318ca789089308e"};
 
-    unsigned char *p = malloc(sizeof(unsigned char) * 64);
+    unsigned char *p = malloc(sizeof(unsigned char) * 32);
     if (p == NULL)
     {
-        printf("unsigned char *p malloc failed: %d", errno);
+        printf("unsigned char *p malloc failed: %d\n", errno);
         return -1;
     }
 
     struct job *j = malloc(sizeof(struct job));
     if (j == NULL)
     {
-        printf("struct job *j malloc failed: %d", errno);
+        printf("struct job *j malloc failed: %d\n", errno);
         free(p);
         return -1;
     }
 
-    hex2bin(p, input_merkle_branches[0], 64);
+    bool r = hex2bin(p, input_merkle_branches[0], 32);
+    if (!r)
+    {
+        printf("Failed to convert %s to byte representation\n");
+        return -1;
+    }
 
-    for (size_t i = 0; i < 64; i++)
+    for (size_t i = 0; i < 32; i++)
     {
         printf("Byte %zu: 0x%02X\n", i, p[i]);
     }
