@@ -19,15 +19,15 @@
    }
  *
 
-    Field	        Received Format	    Usage in Block Header
+    Field           Received Format     Usage in Block Header
     -----           ---------------     ---------------------
-    prevhash	    Big-endian	        Little-endian
-    coinbase1	    Hex string	        Used as-is
-    coinbase2	    Hex string	        Used as-is
-    merkle_branch	Big-endian	        Big-endian (for Merkle root calculation)
-    version	        Big-endian	        Little-endian
-    nbits	        Big-endian	        Big-endian
-    ntime	        Big-endian	        Little-endian
+    prevhash        Big-endian          Little-endian
+    coinbase1       Hex string          Used as-is
+    coinbase2       Hex string          Used as-is
+    merkle_branch   Big-endian          Big-endian (for Merkle root calculation)
+    version         Big-endian          Little-endian
+    nbits           Big-endian          Big-endian
+    ntime           Big-endian          Little-endian
 
  * Sample job message, for block 100,000
  * {
