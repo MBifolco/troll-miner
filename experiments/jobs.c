@@ -83,7 +83,7 @@ https://developer.bitcoin.org/reference/block_chain.html#target-nbits) "4c86041b
 }
  */
 
-#include "jobs.h"
+#include "utils.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -91,6 +91,8 @@ https://developer.bitcoin.org/reference/block_chain.html#target-nbits) "4c86041b
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// BIG TODO: uint8_t vs unsigned char type ???
 
 /**
  * https://reference.cash/mining/stratum-protocol
@@ -102,8 +104,6 @@ https://developer.bitcoin.org/reference/block_chain.html#target-nbits) "4c86041b
  * I'm starting to see why kano has a `pool` object...holds data from startum responses that change somewhat
  * infrequently
  */
-
-bool DEBUGGING = true;
 
 struct mining_subscribe_response {
   char *extranonce1;
@@ -123,24 +123,11 @@ struct mining_notify_message {
 };
 
 struct job {
-  unsigned char coinbase_tx_id[32]; // double_sha256 of coinbase tx built
-  int merkle_branches_n;
+  uint8_t n_merkle_branches;
+  unsigned char coinbase_tx_id[32];   // double_sha256 of coinbase tx built
   unsigned char merkle_tree_root[32]; // merkle tree root is 32 bytes
   unsigned char **merkle_branches;    // n branches, each will be 32 bytes
 };
-
-void debug_msg(char *msg) {
-  if (DEBUGGING) {
-    printf("DEBUG: %s\n", msg);
-  }
-}
-
-void print_hex(unsigned char *h, size_t len) {
-  for (uint8_t i = 0; i < len; ++i) {
-    printf("%02x", h[i]);
-  }
-  printf("\n");
-}
 
 unsigned char *coinbase_section_to_bytes(char *coinbase_str, size_t len) {
   uint8_t cb_hex_len = len / 2;
@@ -149,37 +136,55 @@ unsigned char *coinbase_section_to_bytes(char *coinbase_str, size_t len) {
   return cb_hex;
 }
 
-unsigned char *build_coinbase_tx_id(char *cb_prefix, char *extranonce1, unsigned char *extranonce2,
-                                    size_t extranonce2_len, char *cb_suffix) {
-  unsigned char *cb_tx_id = malloc(sizeof(unsigned char) * 32);
+unsigned char *build_coinbase_tx_id(char *cb_prefix, char *extranonce1, unsigned char *extranonce2, size_t extranonce2_len, char *cb_suffix) {
   unsigned char *coinbase_prefix = coinbase_section_to_bytes(cb_prefix, strlen(cb_prefix)); // TODO: check if == NULL
   unsigned char *coinbase_suffix = coinbase_section_to_bytes(cb_suffix, strlen(cb_suffix)); // TODO: check if == NULL
   unsigned char *extranonce1_hex = malloc(strlen(extranonce1) / 2);                         // TODO: check if == NULL
   hex2bin(extranonce1_hex, extranonce1, strlen(extranonce1) / 2);                           // TODO: Check result
 
-  uint8_t cb_tx_len = (strlen(cb_prefix) / 2) + (strlen(extranonce1) / 2) + extranonce2_len + (strlen(cb_suffix) / 2);
+  uint8_t extranonce1_offset = strlen(cb_prefix) / 2;
+  uint8_t extranonce2_offset = extranonce1_offset + (strlen(extranonce1) / 2);
+  uint8_t cb_suffix_offset = extranonce2_offset + extranonce2_len;
+  uint8_t cb_tx_len = cb_suffix_offset + strlen(cb_suffix) / 2;
+
   unsigned char *cb_tx = malloc(cb_tx_len);
   memcpy(cb_tx, coinbase_prefix, strlen(cb_prefix) / 2);
-  memcpy(cb_tx + strlen(cb_prefix) / 2, extranonce1_hex, strlen(extranonce1) / 2);
-  memcpy(cb_tx + (strlen(cb_prefix) / 2) + (strlen(extranonce1) / 2), extranonce2, extranonce2_len);
-  memcpy(cb_tx + (strlen(cb_prefix) / 2) + (strlen(extranonce1) / 2) + extranonce2_len, coinbase_suffix,
-         strlen(cb_suffix) / 2);
+  memcpy(cb_tx + extranonce1_offset, extranonce1_hex, strlen(extranonce1) / 2);
+  memcpy(cb_tx + extranonce2_offset, extranonce2, extranonce2_len);
+  memcpy(cb_tx + cb_suffix_offset, coinbase_suffix, strlen(cb_suffix) / 2);
+  //   printf("Coinbase tx: ");
+  //   print_hex(cb_tx, cb_tx_len);
 
-  print_hex(cb_tx, cb_tx_len);
+  unsigned char *cb_tx_id = malloc(sizeof(unsigned char) * 32);
+  double_sha256(cb_tx, cb_tx_len, cb_tx_id);
+
   free(coinbase_prefix);
   free(coinbase_suffix);
   free(extranonce1_hex);
   return cb_tx_id;
 }
 
+unsigned char *build_merkle_root(unsigned char *cb_tx_id, unsigned char **merkle_branches, size_t n_merkle_branches) {
+  unsigned char *merkle_root = malloc(32);
+  memcpy(merkle_root, cb_tx_id, 32);
+
+  unsigned char temp[64];
+  memcpy(temp, merkle_root, 32);
+
+  for (uint8_t i = 0; i < n_merkle_branches; ++i) {
+    memcpy(temp + 32, merkle_branches[i], 32);
+    double_sha256(temp, 64, merkle_root);
+    memcpy(temp, merkle_root, 32);
+  }
+
+  return merkle_root;
+}
+
 int main() {
-
-  bool debugging = false;
-
   /**
    * https://mempool.space/api/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87/hex
    * Because block 100,000 is quite old, decomposing the serialized coinbase tx, we see that
-   * extranonce1 == 0x02   and is only 1 byte
+   * extranonce1 ==   0x02 and is only 1 byte
    * extranonce2 == 0x0602 and is only 2 bytes
    *
    * extranonce1 is generally 4 to 8 bytes
@@ -193,8 +198,7 @@ int main() {
   struct mining_notify_message notify;
   notify.job_id = "674320f700005d59\0";
   notify.previous_block_hash = "000000000002d01c1fccc21636b607dfd930d31d01c3a62104612a1719011250\0";
-  notify.coinbase_prefix =
-      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b\0";
+  notify.coinbase_prefix = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b\0";
   notify.coinbase_suffix = "ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457"
                            "516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000\0";
   notify.version = "00000001\0";
@@ -227,13 +231,19 @@ int main() {
   }
 
   unsigned char extranonce2[2] = {0x06, 0x02};
-  unsigned char *coinbase_tx_id =
-      build_coinbase_tx_id(notify.coinbase_prefix, sub.extranonce1, extranonce2, sub.extranonce2_size,
-                           notify.coinbase_suffix); // TODO: check if coinbase_tx_id == NULL
+  unsigned char *coinbase_tx_id = build_coinbase_tx_id(notify.coinbase_prefix, sub.extranonce1, extranonce2, sub.extranonce2_size,
+                                                       notify.coinbase_suffix); // TODO: check if coinbase_tx_id == NULL
+  printf("Coinbase tx ID: ");
+  print_hex(coinbase_tx_id, 32);
+
+  unsigned char *merkle_root = build_merkle_root(coinbase_tx_id, j->merkle_branches, notify.n_merkle_branches); // TODO: check if successful
+  printf("Merkle root: ");
+  print_hex(merkle_root, 32);
 
   debug_msg("freeing");
   free(j);
   free(notify.merkle_branches);
   free(coinbase_tx_id);
+  free(merkle_root);
   return 0;
 }
