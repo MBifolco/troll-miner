@@ -2,6 +2,7 @@
 #define JOBS_H
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __GNUC__
 #define likely(x)       __builtin_expect(!!(x), 1)
