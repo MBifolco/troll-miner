@@ -158,8 +158,14 @@ unsigned char *build_coinbase_tx_id(char *cb_prefix, char *extranonce1, unsigned
   hex2bin(extranonce1_hex, extranonce1, strlen(extranonce1) / 2);                           // TODO: Check result
 
   uint8_t cb_tx_len = (strlen(cb_prefix) / 2) + (strlen(extranonce1) / 2) + extranonce2_len + (strlen(cb_suffix) / 2);
-
   unsigned char *cb_tx = malloc(cb_tx_len);
+  memcpy(cb_tx, coinbase_prefix, strlen(cb_prefix) / 2);
+  memcpy(cb_tx + strlen(cb_prefix) / 2, extranonce1_hex, strlen(extranonce1) / 2);
+  memcpy(cb_tx + (strlen(cb_prefix) / 2) + (strlen(extranonce1) / 2), extranonce2, extranonce2_len);
+  memcpy(cb_tx + (strlen(cb_prefix) / 2) + (strlen(extranonce1) / 2) + extranonce2_len, coinbase_suffix,
+         strlen(cb_suffix) / 2);
+
+  print_hex(cb_tx, cb_tx_len);
   free(coinbase_prefix);
   free(coinbase_suffix);
   free(extranonce1_hex);
@@ -220,10 +226,6 @@ int main() {
     hex2bin(j->merkle_branches[i], notify.merkle_branches[i], 32);
   }
 
-  /**
-   * TODO: We'll need to go back and figure out how to pass this along so when ASIC finishes nonce space, we can update
-   * extranonce2
-   */
   unsigned char extranonce2[2] = {0x06, 0x02};
   unsigned char *coinbase_tx_id =
       build_coinbase_tx_id(notify.coinbase_prefix, sub.extranonce1, extranonce2, sub.extranonce2_size,
