@@ -44,7 +44,7 @@
       https://mempool.space/api/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87/hex
 
       // params [2] - prefix of the coinbase transaction (to precede extra nonce 2).
-      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c8604",
+      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b",
 
       // NOTE: extra nonce 2 for coinbase tx of block 100,000 = 1b020602 (like coinbase1 & coinbase2, endianess does not apply)
 
@@ -98,6 +98,9 @@
  *
  * I'm starting to see why kano has a `pool` object...holds data from startum responses that change somewhat infrequently
  */
+
+bool DEBUGGING = true;
+
 struct mining_subscribe_response
 {
     char *extranonce1;
@@ -119,14 +122,15 @@ struct mining_notify_message
 
 struct job
 {
+    unsigned char coinbase_tx_id[32]; // double_sha256 of coinbase tx built
     int merkle_branches_n;
     unsigned char merkle_tree_root[32]; // merkle tree root is 32 bytes
     unsigned char **merkle_branches;    // n branches, each will be 32 bytes
 };
 
-void debug_msg(char *msg, bool enabled)
+void debug_msg(char *msg)
 {
-    if (enabled)
+    if (DEBUGGING)
     {
         printf("DEBUG: %s\n", msg);
     }
@@ -143,6 +147,9 @@ void print_hex(unsigned char *h, size_t len)
 
 int main()
 {
+
+    bool debugging = false;
+
     /**
      * https://mempool.space/api/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87/hex
      * Because block 100,000 is quite old, decomposing the serialized coinbase tx, we see that
@@ -151,24 +158,22 @@ int main()
      *
      * extranonce1 is generally 4 to 8 bytes
      */
-    bool debugging = false;
-
-    debug_msg("DEBUG: building mining_subscribe_response", debugging);
+    debug_msg("building mining_subscribe_response");
     struct mining_subscribe_response sub;
     sub.extranonce1 = "02\0";
     sub.extranonce2_size = 2;
 
-    debug_msg("DEBUG: building mining_notify_message", debugging);
+    debug_msg("building mining_notify_message");
     struct mining_notify_message notify;
     notify.job_id = "674320f700005d59\0";
     notify.previous_block_hash = "000000000002d01c1fccc21636b607dfd930d31d01c3a62104612a1719011250\0";
-    notify.coinbase_prefix = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c8604\0";
+    notify.coinbase_prefix = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b\0";
     notify.coinbase_suffix = "ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000\0";
     notify.version = "00000001\0";
     notify.nbits = "4c86041b\0";
     notify.time = "4d1b2237\0";
 
-    debug_msg("DEBUG: building mining_notify_message merkle_branches", debugging);
+    debug_msg("building mining_notify_message merkle_branches");
     // START: MERKLE BRANCH INPUT PREP
     // Overkill for this example, but it's what will inevitably need to happen
     notify.n_merkle_branches = 2;
@@ -185,23 +190,20 @@ int main()
      * 6. TBD
      */
 
-    debug_msg("DEBUG: building job *j merkle_branches", debugging);
+    debug_msg("building job *j merkle_branches");
     struct job *j = malloc(sizeof(struct job));                                      // TODO: check if malloc res == NULL
     j->merkle_branches = malloc(sizeof(unsigned char *) * notify.n_merkle_branches); // TODO: check if malloc res == NULL
     for (uint8_t i = 0; i < notify.n_merkle_branches; i++)
     {
-        debug_msg("DEBUG: allocating merkle_branch", debugging);
         j->merkle_branches[i] = malloc(sizeof(unsigned char) * 32); // TODO: check if malloc res == NULL
-        debug_msg("DEBUG: hex2bin", debugging);
         hex2bin(j->merkle_branches[i], notify.merkle_branches[i], 32);
-
-        printf("Merkle branch %d built: ", i);
-        print_hex(j->merkle_branches[i], 32);
     }
 
-    debug_msg("DEBUG: free j", debugging);
+    // NOTE: usually, extranonce2 would start at 0 - but...we're not going to do that :)
+    unsigned char extranonce2[2] = 0x0602;
+
+    debug_msg("freeing");
     free(j);
-    debug_msg("DEBUG: free merkle_branches", debugging);
     free(notify.merkle_branches); // TODO: Do we need to free each "column"? Probably...
     return 0;
 }
