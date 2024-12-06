@@ -5,6 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "sdkconfig.h"
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <lwip/tcpip.h>
@@ -28,6 +29,7 @@ static int pool_connect() {
         ESP_LOGE(TAG, "Failed to create socket");
         return -1;
     }
+
 
     // Resolve hostname to IP address
     struct addrinfo hints, *res, *p;
