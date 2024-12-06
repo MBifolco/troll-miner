@@ -87,6 +87,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "jobs.h"
 
 /**
@@ -199,8 +200,15 @@ int main()
         hex2bin(j->merkle_branches[i], notify.merkle_branches[i], 32);
     }
 
+    uint8_t coinbase_prefix_hex_len = strlen(notify.coinbase_prefix) / 2;
+    unsigned char *coinbase_prefix_hex = malloc(sizeof(unsigned char) * coinbase_prefix_hex_len);
+    hex2bin(coinbase_prefix_hex, notify.coinbase_prefix, coinbase_prefix_hex_len); // TODO: check this was successful
+    print_hex(coinbase_prefix_hex, coinbase_prefix_hex_len);
+
+    uint8_t coinbase_suffix_hex_len = strlen(notify.coinbase_suffix) / 2;
+    unsigned char *coinbase_suffix_hex = malloc(sizeof(unsigned char) * coinbase_suffix_hex_len);
     // NOTE: usually, extranonce2 would start at 0 - but...we're not going to do that :)
-    unsigned char extranonce2[2] = 0x0602;
+    unsigned char extranonce2[2] = {0x06, 0x02};
 
     debug_msg("freeing");
     free(j);
