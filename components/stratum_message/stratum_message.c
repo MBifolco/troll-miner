@@ -1,11 +1,16 @@
 #include "stratum_message.h"
 #include "esp_log.h"
-#include "job.h"
+//#include "job.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "utils.h"
-static const char *TAG = "JOB";
+#include "queue_handles.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+
+static const char *TAG = "STRATUM_MESSAGE";
 
 void (*methodHandlers[NUM_METHODS])() = {
     process_mining_notify, 
@@ -31,6 +36,7 @@ void process_mining_notify(cJSON * json )
 {
     mining_notify * mining_notify = malloc(sizeof(mining_notify));
     
+    ESP_LOGI(TAG, "build notify object to send to job queue");
     cJSON * params = cJSON_GetObjectItem(json, "params");
 
     // set job id
@@ -73,24 +79,36 @@ void process_mining_notify(cJSON * json )
     //int value = cJSON_IsTrue(cJSON_GetArrayItem(params, paramsLength - 1));
     //message->should_abandon_work = value;
 
-    //process_mining_notify(mining_notify);
+    if (xQueueSend(stratum_to_job_queue, &mining_notify, portMAX_DELAY) != pdPASS) {
+        printf("Failed to send mining_notify to queue!\n");
+        free(mining_notify); // Free memory if sending fails
+    }
     
+    check_queue_items();
     free(mining_notify);
+}
+
+void check_queue_items() {
+    UBaseType_t items_in_queue = uxQueueMessagesWaiting(stratum_to_job_queue);
+
+    ESP_LOGI(TAG, "Number of items in the queue: %u", (unsigned int)items_in_queue);
 }
 
 void process_mining_set_difficulty(cJSON * json)
 {
-    cJSON * params = cJSON_GetObjectItem(json, "params");
-    mining_set_difficulty * mining_set_difficulty = malloc(sizeof(mining_set_difficulty));
-    mining_set_difficulty->difficulty = cJSON_GetArrayItem(params, 0)->valueint;
+    ESP_LOGI(TAG, "build set difficulty object to send to job queue");
+    //cJSON * params = cJSON_GetObjectItem(json, "params");
+    //mining_set_difficulty * mining_set_difficulty = malloc(sizeof(mining_set_difficulty));
+    //mining_set_difficulty->difficulty = cJSON_GetArrayItem(params, 0)->valueint;
     // call whatever function will be handling set difficulty on asic
 }
 
 void process_mining_set_version_mask(cJSON * json)
 {
-    cJSON * params = cJSON_GetObjectItem(json, "params");
-    mining_set_version_mask * mining_set_version_mask = malloc(sizeof(mining_set_version_mask));
-    mining_set_version_mask->version_mask = strtoul(cJSON_GetArrayItem(params, 0)->valuestring, NULL, 16);
+    ESP_LOGI(TAG, "build set version mask object to send to job queue");
+    //cJSON * params = cJSON_GetObjectItem(json, "params");
+    //mining_set_version_mask * mining_set_version_mask = malloc(sizeof(mining_set_version_mask));
+    //mining_set_version_mask->version_mask = strtoul(cJSON_GetArrayItem(params, 0)->valuestring, NULL, 16);
     // call whatever function will be handling set version mask on asic
 }
 
@@ -108,18 +126,23 @@ int parase_server_message_id(cJSON * json)
 
 void parse_server_request(cJSON * json)
 {
+    ESP_LOGI(TAG, "parse server request");
     cJSON * method_json = cJSON_GetObjectItem(json, "method");
     stratum_server_request_method method = -1;
+    
     // it smells to me like there is something redundant here
     if (cJSON_IsString(method_json)) {
         char * method_str = method_json->valuestring;
 
         if (strcmp(method_str, "mining.notify") == 0) {
             method = MINING_NOTIFY;
+            ESP_LOGI(TAG, "mining.notify");
         } else if (strcmp(method_str, "mining.set_difficulty") == 0) {
             method = MINING_SET_DIFFICULTY;
+            ESP_LOGI(TAG, "mining.set_difficulty");
         } else if (strcmp(method_str, "mining.set_version_mask") == 0) {
             method = MINING_SET_VERSION_MASK;
+            ESP_LOGI(TAG, "mining.set_version_mask");
         } else {
             ESP_LOGI(TAG, "unhandled method in stratum message: %s", method_json->valuestring);
             // should this return error?
@@ -134,7 +157,7 @@ void parse_server_request(cJSON * json)
     } else {
         printf("Invalid method!\n");
     }
- 
+    
 }
 
 
@@ -155,24 +178,14 @@ void parse_message(const char * message_json)
     // parse method first - it's existence determines if it's a request or response
     // if it's a request we want to get started immediately
     cJSON * method_json = cJSON_GetObjectItem(json, "method");
+
     //if there is a method this is a server request
     if (method_json != NULL && cJSON_IsString(method_json)) {
-        parse_server_request(method_json);
+        parse_server_request(json);
     //if none then it's a server response with a result or error
     } else {
         parse_server_response(json);
     }
-
-    /*
-    suggested new flow
-    1. parse method
-    2. if method isn't null create a request object
-    3. if method is null create a response object
-    4. parse id
-    5. if request - parse request
-    6. if response - check for error
-    7. if no error parse result
-    */
 
     // whats this?
     //done:

@@ -8,6 +8,8 @@
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <lwip/tcpip.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 static const char *TAG = "Pool";
 
@@ -20,20 +22,6 @@ static int message_id = 1;
 static int pool_connect() {
     ESP_LOGI(TAG, "Connecting to pool at %s:%d", CONFIG_POOL_PRIMARY_URL, CONFIG_POOL_PRIMARY_PORT);
 
-    char host_ip[INET_ADDRSTRLEN] = "45.76.165.182";
-
-    //ESP_LOGI(TAG, "Resolving pool hostname...");
-    //struct hostent *primary_dns_addr = gethostbyname(CONFIG_POOL_PRIMARY_URL);
-    //if (primary_dns_addr == NULL) {
-    //    ESP_LOGD(TAG, "Heartbeat. Failed DNS check for: %s!", CONFIG_POOL_PRIMARY_URL);
-    //    return -1;
-    //}
-
-    //inet_ntop(AF_INET, (void *)primary_dns_addr->h_addr_list[0], host_ip, sizeof(host_ip));
-
-    //ESP_LOGI(TAG, "Pool IP address: %s", host_ip);
-
-    ESP_LOGI(TAG, "Creating socket...");
     // Create a socket
     pool_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (pool_socket < 0) {
@@ -41,36 +29,63 @@ static int pool_connect() {
         return -1;
     }
 
-    // Set up the server address
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(CONFIG_POOL_PRIMARY_PORT);
-    server_addr.sin_addr.s_addr = inet_addr(host_ip);
+    // Resolve hostname to IP address
+    struct addrinfo hints, *res, *p;
+    char ip_address[INET6_ADDRSTRLEN];
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // Use AF_INET for IPv4; change to AF_UNSPEC for IPv4/IPv6
+    hints.ai_socktype = SOCK_STREAM;
 
-    // Connect to the server
-    if (connect(pool_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        ESP_LOGE(TAG, "Failed to connect to pool");
+    int status = getaddrinfo(CONFIG_POOL_PRIMARY_URL, NULL, &hints, &res);
+    if (status != 0) {
+        ESP_LOGE(TAG, "Failed to resolve hostname: %s", getaddrinfo_error(status));
         close(pool_socket);
-        pool_socket = -1;
         return -1;
     }
 
-    ESP_LOGI(TAG, "Connected to pool");
-    xEventGroupSetBits(pool_event_group, POOL_CONNECTED_BIT);
+    // Loop through the results to find an address to connect to
+    for (p = res; p != NULL; p = p->ai_next) {
+        // Convert the IP to a string for logging
+        void *addr = &((struct sockaddr_in *)p->ai_addr)->sin_addr;
+        inet_ntop(p->ai_family, addr, ip_address, sizeof(ip_address));
+        ESP_LOGI(TAG, "Resolved IP: %s", ip_address);
 
-    // configure version rolling
-    configure_version_rolling();
+        // Set up the server address
+        struct sockaddr_in server_addr;
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(CONFIG_POOL_PRIMARY_PORT);
+        memcpy(&server_addr.sin_addr, addr, sizeof(server_addr.sin_addr));
 
-    // subscribe to pool
-    subscribe_to_pool();
+        // Attempt to connect
+        if (connect(pool_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == 0) {
+            ESP_LOGI(TAG, "Connected to pool at %s:%d", ip_address, CONFIG_POOL_PRIMARY_PORT);
+            freeaddrinfo(res); // Free address info after successful connection
+            xEventGroupSetBits(pool_event_group, POOL_CONNECTED_BIT);
 
-    // authenticate with pool
-    authenticate_with_pool();
+            // configure version rolling
+            configure_version_rolling();
 
-    // suggest difficulty
-    suggest_difficulty();
-    return 0;
+            // subscribe to pool
+            subscribe_to_pool();
+
+            // authenticate with pool
+            authenticate_with_pool();
+
+            // suggest difficulty
+            suggest_difficulty();
+            return 0;
+        } else {
+            ESP_LOGE(TAG, "Failed to connect to %s", ip_address);
+        }
+    }
+     // Clean up if connection fails
+    ESP_LOGE(TAG, "Failed to connect to any resolved IP addresses");
+    freeaddrinfo(res);
+    close(pool_socket);
+    pool_socket = -1;
+    return -1;    
 }
+
 
 // Function to receive data from the pool
 static int pool_receive(char *buffer, size_t buffer_len) {
@@ -88,8 +103,27 @@ static int pool_receive(char *buffer, size_t buffer_len) {
         return -1; // Connection closed
     } else {
         buffer[bytes_received] = '\0'; // Null-terminate the string
-        ESP_LOGI(TAG, "Received message: %s", buffer);
-        process_message(buffer);
+
+        // Split messages by newline
+        char *message_start = buffer;
+        char *newline = NULL;
+
+        while ((newline = strchr(message_start, '\n')) != NULL) {
+            *newline = '\0'; // Replace newline with null terminator
+
+            ESP_LOGI(TAG, "Received message: %s", message_start);
+            // Process the individual message
+            process_message(message_start);
+
+            // Move to the next message
+            message_start = newline + 1;
+        }
+
+        // Handle incomplete message (if any)
+        if (*message_start != '\0') {
+            ESP_LOGW(TAG, "Partial message received: %s", message_start);
+            // Optionally, handle partial messages or buffer them
+        }
     }
     return bytes_received;
 }
@@ -102,35 +136,6 @@ static void pool_disconnect() {
         xEventGroupClearBits(pool_event_group, POOL_CONNECTED_BIT);
         ESP_LOGI(TAG, "Disconnected from pool");
     }
-}
-
-void extract_hostname(const char *stratum_url, char *hostname, size_t hostname_len) {
-    const char *prefix = "stratum+tcp://";
-    if (strncmp(stratum_url, prefix, strlen(prefix)) == 0) {
-        snprintf(hostname, hostname_len, "%s", stratum_url + strlen(prefix));
-    } else {
-        snprintf(hostname, hostname_len, "%s", stratum_url);  // No prefix, use as-is
-    }
-}
-
-int resolve_hostname(const char *hostname, struct sockaddr_in *server_addr) {
-    struct addrinfo hints = {
-        .ai_family = AF_INET,  // Use IPv4
-        .ai_socktype = SOCK_STREAM,  // TCP stream sockets
-    };
-    struct addrinfo *res;
-    int err = getaddrinfo(hostname, NULL, &hints, &res);
-    if (err != 0 || res == NULL) {
-        printf("DNS lookup failed for %s: %d\n", hostname, err);
-        return -1;
-    }
-
-    // Extract the first resolved address
-    struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
-    server_addr->sin_addr = addr->sin_addr;  // Copy resolved IP address
-    server_addr->sin_family = AF_INET;
-    freeaddrinfo(res);
-    return 0;
 }
 
 // Initialize the pool component
@@ -200,7 +205,7 @@ int suggest_difficulty() {
 }
 // Persistent task for managing the pool connection
 void pool_task() {
-    char buffer[512];
+    char *buffer = malloc(2048);
 
     while (true) {
         if (pool_socket < 0) {
@@ -219,11 +224,26 @@ void pool_task() {
         }
 
         // Listen for data
-        int bytes_received = pool_receive(buffer, sizeof(buffer));
+        int bytes_received = pool_receive(buffer, 2048);
         if (bytes_received < 0) {
             ESP_LOGE(TAG, "Connection lost. Reconnecting...");
             pool_disconnect();
             vTaskDelay(pdMS_TO_TICKS(5000)); // Wait before retrying
         }
+    }
+}
+
+
+const char* getaddrinfo_error(int err) {
+    switch (err) {
+        case EAI_AGAIN: return "Temporary failure in name resolution";
+        case EAI_BADFLAGS: return "Invalid value for ai_flags";
+        case EAI_FAIL: return "Non-recoverable failure in name resolution";
+        case EAI_FAMILY: return "ai_family not supported";
+        case EAI_MEMORY: return "Memory allocation failure";
+        case EAI_NONAME: return "Name or service not known";
+        case EAI_SERVICE: return "Service not supported for socket type";
+        case EAI_SOCKTYPE: return "ai_socktype not supported";
+        default: return "Unknown error";
     }
 }

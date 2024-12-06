@@ -4,7 +4,8 @@ SRCS
 
 INCLUDE_DIRS 
     "include"
-
+    "../stratum_message/include"
+    "../../main/"
 REQUIRES
     "json"
 )

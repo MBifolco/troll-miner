@@ -6,6 +6,7 @@ INCLUDE_DIRS
     "include"
     "../job/include"
     "../utils/include"
+    "../../main/"
 
 REQUIRES
     "json"

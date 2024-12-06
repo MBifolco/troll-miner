@@ -76,7 +76,7 @@ typedef struct
 } mining_set_version_mask;
 
 
-
+void check_queue_items();
 void process_message(const char *message);
 void parse_message(const char * message_json);
 void process_mining_notify();

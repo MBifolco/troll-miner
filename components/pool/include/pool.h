@@ -25,4 +25,6 @@ int authenticate_with_pool();
 // Function to suggest difficulty to the pool
 int suggest_difficulty();
 
+const char* getaddrinfo_error(int err);
+
 #endif // POOL_COMPONENT_H
