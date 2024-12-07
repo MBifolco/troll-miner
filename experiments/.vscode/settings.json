@@ -1,0 +1,8 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 160, IndentWidth: 4 }",
+  "files.associations": {
+    "cstdint": "cpp",
+    "chrono": "c"
+  }
+}
