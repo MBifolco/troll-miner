@@ -64,7 +64,7 @@ We ultimately need to be able to construct some variation of the hex-encoded blo
 | nbits | `bits` | 4 | uint32 |
 | nonce | `nonce` | 4 | uint32 |
 
-If you start searching for some of the fields in the JSON resposne, you won't find them in the block header. In some instances, like the `nonce`
+If you start searching for some of the fields in the JSON response, you won't find them in the block header. In some instances, like the `nonce`
 and `bits` fields, they need to be converted to hex. In the other cases, like `merkle_root` and `previousblockhash`, it's because their byte order is
 reversed in the block header. This is important because of each field's [endianess](https://www.rapidtables.com/prog/endianess.html). Not only that,
 the endianess of the bytes sent in a `mining.notify` message do not necessarily match the endianess of the particular block header field.
