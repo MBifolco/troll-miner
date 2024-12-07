@@ -56,7 +56,7 @@ We ultimately need to be able to construct some variation of the hex-encoded blo
 
 [Here's a quick reminder of what's in a block header](https://developer.bitcoin.org/reference/block_chain.html#block-headers)
 | Field Name | JSON Field Name | # of bytes | Type |
-|------------|------------|------|
+|------------|-----------------|------------|------|
 | version | `version` | 4 | int32 |
 | previous block hash | `previousblockhash` | 32 | char[32] |
 | merkle tree root | `merkle_root` | 32 | char[32] |
