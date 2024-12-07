@@ -5,5 +5,6 @@
 #include "freertos/queue.h"
 
 extern QueueHandle_t stratum_to_job_queue;
+extern QueueHandle_t work_to_asic_queue;
 
 #endif
