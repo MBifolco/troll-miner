@@ -242,6 +242,7 @@ After you have the values for the [block header](https://developer.bitcoin.org/r
 
 You'll likely ask "_What about the calculated `nonce` value?_" ASIC's produce `nonce` results in little-endian format, so no modification is necessary.
 
+This is what [jobs.c](jobs.c) is doing and how we arrived at the sample messages/structs driving the calculation for block 100,000.
 
 # References
 
