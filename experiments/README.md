@@ -100,6 +100,58 @@ The `mining.notify` message contains the majority of information needed to build
 
 The structures of the `mining.notify` message and the `mining.subscribe` response can be found here: https://reference.cash/mining/stratum-protocol
 
+### Coinbase Transaction and Merkle Tree Root
+
+The `mining.notify` contains, most of the information we need to build the block header, but not everything. The miner needs to build the coinbase transaction and from it, build the
+coinbase transaction ID (aka - double SHA256 of the coinbase transaction). Only then can the miner compute the merkle tree root based on the calculated coinbase tx ID + the merkle branches
+provided by `mining.notify`. 
+
+But how do we build the coinbase transaction? `params[2]` and `params[3]` in `mining.notify` give the "prefix" and "suffix" of the hex-encoded coinbase transaction. This is where
+we see the importance of the `mining.subscribe` response.
+
+```
+coinbase tx = coinbase_prefix || extranonce1 || extranonce2 || coinbase_suffix
+coinbase tx ID = double_SHA256(coinbase tx)
+```
+
+When a nonce space is exhausted for a block header, the miner modifies the value of `extranonce2`, recomputes the merkle tree root, and explores the next nonce space.
+
+### Block 100,000 Coinbase Transaction
+
+Per the last section, we need to deconstruct block 100,000's coinbase transaction to get the correct data in our test stratum messages.
+
+Here's a friendly version of block 100,000's coinbase transaction: https://mempool.space/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87
+
+[We need the hex encoding though](https://mempool.space/api/tx/8c14f0db3df150123e6f3dbbf30f8b955a8249b62ac1d1ff16284aefa3d06d87/hex):
+```
+01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b020602ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000
+```
+
+With this, we can deconstruct the fields we need:
+* `coinbase_prefix`: `01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b`
+* `extranonce1`: `02`
+* `extranonce2`: `0602`
+* `coinbase_suffix`: `ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000`
+
+### Block 100,000 stratum messages
+
+#### `mining.subscribe`
+
+After decomposing the coinbase transaction, we can build the `minings.subscribe` response:
+
+```json
+{
+    "result": [
+        [
+            ["mining.notify","67f68537"]
+        ],
+        "02", // extranonce1
+        2     // extranonce2 byte length
+    ],
+    "id":2,
+    "error":null
+}
+```
 
 # References
 
