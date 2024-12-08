@@ -22,8 +22,8 @@ only just begun to truly understand what is involved in the syntax and symantics
 
 Instead, why not start from a mined block and work backwards - reverse engineer the stratum messages that likely could have
 been sent at the time for it. Our block candidate was [block 100,000](https://mempool.space/block/000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506). We felt this was a good candidate because
-* It has 4 transactions - so merkle tree root calculation wouldn't be too crazy
-* The network difficulty in 2010 was more "simpler" at 14k vs today's (Dec 2024) 100T+
+* It has 4 transactions - merkle tree root calculation wouldn't be too crazy
+* The network difficulty in 2010 was "simpler" at 14k vs today's (Dec 2024) 100T+
 
 ## Block 100,000
 
@@ -85,6 +85,21 @@ f3e94742aca4b5ef85488dc37c06c3282295ffec960994b2c0d5ac2a25a95766
 ------>
 50120119172a610421a6c3011dd330d9df07b63616c2cc1f1cd0020000000000
 ```
+
+If we know the end state of the block header and it's hash, we should be able to work backwards to a plausible set of stratum message's needed to construct said block header.
+
+## Pool stratum messages
+
+The two main messages are
+1. The response from a pool when a client sends the `mining.subscribe` request
+2. The `mining.notify` message sent from a pool to a client.
+
+The `mining.notify` message contains the majority of information needed to build a header, however, the `mining.subscribe` pool response contains two key pieces of information:
+1. `extranonce1`
+2. `extranonce2` byte length
+
+The structures of the `mining.notify` message and the `mining.subscribe` response can be found here: https://reference.cash/mining/stratum-protocol
+
 
 # References
 
