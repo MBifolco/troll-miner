@@ -248,15 +248,14 @@ int main() {
     print_hex(j->merkle_tree_root, 32);
 
     // would usually start @ 0
-    j->nonce[0] = 0x10;
-    j->nonce[1] = 0x57;
-    j->nonce[2] = 0x2b;
-    j->nonce[3] = 0x0f;
+    j->nonce[0] = 0x0f;
+    j->nonce[1] = 0x2b;
+    j->nonce[2] = 0x57;
+    j->nonce[3] = 0x10;
 
     reverse_bytes(j->version, 4);
     reverse_bytes(j->previous_block_hash, 32);
     reverse_bytes(j->time, 4);
-    reverse_bytes(j->nonce, 4);
 
     /**
      * At this point, the "job" would be ready. Now let's validate by building the block header,
