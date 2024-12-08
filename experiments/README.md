@@ -153,10 +153,75 @@ After decomposing the coinbase transaction, we can build the `minings.subscribe`
 }
 ```
 
+#### `mining.notify`
+
+With the decomposed coinbase transaction and the information available about [block 100,000](https://mempool.space/block/000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506?showDetails=true&view=actual#details)
+we can construct the `mining.notify` message.
+
+OK - that's actually a lie. We'll build it first and then dig into something I've completely glossed over: merkle branches in `mining.notify`.
+
+```json
+{
+   "id" : null,
+   "method" : "mining.notify",
+   "params" : [
+      // params[0] - job id
+      "674320f700005d59",
+
+      // params[1] - previous block hash
+      "000000000002d01c1fccc21636b607dfd930d31d01c3a62104612a1719011250",
+
+      // params [2] - prefix of the coinbase transaction
+      "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b",
+
+      // params [3] - suffix of the coinbase transaction (to follow extra nonce 2).
+      "ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000",
+
+      // params[4] - array of merkle branches
+      [
+         "c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff",
+         "49aef42d78e3e9999c9e6ec9e1dddd6cb880bf3b076a03be1318ca789089308e"
+      ],
+
+      // params[5] - version
+      "00000001",
+
+      // params[6] - difficulty (take the `bits` value above and in python: hex(453281356)[2:], then reverse the bytes - this field is big-endian
+      "4c86041b",
+
+      // params[7] - current time for the block (take the `timestamp` value above and in python: hex(1293623863)[2:])
+      "4d1b2237",
+
+      // params[8]
+      true
+   ]
+}
+```
+
+### A note about merkle tree branches...
+
+
+## Building Block 100,000
+
+
 # References
 
-Python method to do byte-reversal
+### Python method to do byte-reversal
 ```python
 def r(a):
     return "".join(reversed([a[i:i+2] for i in range(0, len(a), 2)]))
 ```
+
+### Field Endianess Table
+|Field           |Received Format     |Usage in Block Header|
+|-----           |---------------     |---------------------|
+|prevhash        |Big-endian          |Little-endian|
+|coinbase1       |Hex string          |Used as-is|
+|coinbase2       |Hex string          |Used as-is|
+|extranonce1     |Hex string          |Used as-is|
+|extranonce2     |N/A                 |Used as-is|
+|merkle_branch   |Big-endian          |Big-endian (Merkle tree root)|
+|version         |Big-endian          |Little-endian|
+|nbits           |Big-endian          |Big-endian|
+|ntime           |Big-endian          |Little-endian|
+|nonce           |N/A                 |Little-endian|
