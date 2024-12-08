@@ -186,7 +186,7 @@ OK - that's actually a lie. We'll build it first and then dig into something I'v
       // params 5 - version
       "00000001",
 
-      // params 6 - difficulty (take the `bits` value above and in python: hex(453281356)[2:], then reverse the bytes - this field is big-endian
+      // params 6 - difficulty (take the `bits` value above and in python: hex(453281356)[2:], then reverse the bytes - this field is big-endian)
       "4c86041b",
 
       // params 7 - current time for the block (take the `timestamp` value above and in python: hex(1293623863)[2:])
@@ -200,8 +200,47 @@ OK - that's actually a lie. We'll build it first and then dig into something I'v
 
 ### A note about merkle tree branches...
 
+Pools will provide the list of merkle branches in params[4] of `mining.notify` but how do you use them?
+
+The stratum protocol is setup so that the merkle branches given "_require the least amount of work for the miner to compute the merkle tree root._" But what does that mean?
+
+It means the following: after you compute the coinbase tx ID, you only need to do one pass through the merkle branches array to compute the merkle tree root.
+
+First, go read this article about computing block 100,000's merkle tree root: https://medium.com/@stolman.b/1-4-hashing-transactions-txids-to-find-the-merkle-root-3aa5255f8de8
+
+OK - welcome back...now, the merkle branches array above. [Here, you'll find block 100,000's 4 transactions](https://mempool.space/block/000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506?showDetails=true&view=actual#details), but we're only interested in the LAST THREE - remember, we'll be handcrafting the coinbase tx ID.
+
+So given txs [TX1 (coinbase), TX2, TX3, TX4] yields
+```
+          Root
+         /    \
+       H12    H34
+       / \    / \
+      H1 H2  H3 H4
+```
+Therefore, we only need `[H2, H34]` to reach the root. This is what is represented in the merkle branches array above in our sample `mining.notify` message.
+
+Remember that medium article I told you to go read that you probably didn't? Go read it. The first thing to do before computing the hashes is flipping the byte order of TXID 2, 3, 
+and 4. In otherwords, if you're looking at `H2` and saying "_but that's not the second transaction in block 100,000!_" - flip the bytes.
 
 ## Building Block 100,000
+
+With that, you have everything you need to build the block header and iterate through a nonce space to to see if you can find the target hash of block 100,000:
+```
+000000000003ba27aa200b1cecaad478d2b00432346c3f1f3986da1afd33e506
+```
+
+But, how exactly do you build the header? The values read on http://mempool.space don't match the serialized, hex-encoded version of the block header.
+
+_Endianess has entered the chat._
+
+After you have the values for the [block header](https://developer.bitcoin.org/reference/block_chain.html#block-headers), you need to ensure the expected byte ordering. Based on what
+`mining.notify` sent us:
+* `version` needs to be reversed
+* `previous_block_hash` needs to be reveresed
+* `time` needs to be reversed
+
+You'll likely ask "_What about the calculated `nonce` value?_" ASIC's produce `nonce` results in little-endian format, so no modification is necessary.
 
 
 # References
