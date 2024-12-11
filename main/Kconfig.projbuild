@@ -46,6 +46,14 @@ menu "WiFi Configuration"
 
 endmenu
 
+menu "Testing Configuration"
+    config MOCK_POOL
+        default false
+        bool "Mock Pool & WIFI"
+        help
+            Mock the pool & wifi. Will use mocked requests instead.
+endmenu
+
 menu "Pool Configuration"
     config POOL_PRIMARY_URL
         string "Primary POOL Address"

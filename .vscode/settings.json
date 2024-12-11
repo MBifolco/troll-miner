@@ -3,7 +3,10 @@
   "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 160, IndentWidth: 4 }",
   "idf.adapterTargetName": "esp32s3",
   "files.associations": {
+    "*.sol": "solidity",
     "cstdint": "cpp",
-    "chrono": "c"
+    "chrono": "c",
+    "pool.h": "c",
+    "sdkconfig.h": "c"
   }
 }
