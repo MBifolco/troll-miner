@@ -1,3 +1,4 @@
+#include "asic.h"
 #include "job.h"
 #include "esp_log.h"
 #include "queue_handles.h"

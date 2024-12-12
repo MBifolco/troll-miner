@@ -34,7 +34,7 @@ Functions for processing stratum messages on same ESP32 as pool connection
 
 void process_mining_notify(cJSON * json )
 {
-    mining_notify * mining_notify = malloc(sizeof(mining_notify));
+    mining_notify * mining_notify = malloc(sizeof(*mining_notify));
     
     ESP_LOGI(TAG, "build notify object to send to job queue");
     cJSON * params = cJSON_GetObjectItem(json, "params");

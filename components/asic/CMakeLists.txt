@@ -1,18 +1,20 @@
 idf_component_register(
 SRCS
     "asic.c"
-    "common.c"
     "fayksic.c"
-    "serial.c"
     "crc.c"
+    "common.c"
+    "serial.c"
 
 INCLUDE_DIRS 
     "include"
     "../job/include"
     "../../main/"
+    "../stratum_message/include"
     "../utils/include"
 
 REQUIRES 
     "freertos"
     "driver"
+    "json"
 )

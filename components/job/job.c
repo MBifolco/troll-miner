@@ -47,5 +47,4 @@ void job_task(void *pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(10));
     }
     // this probably needs to be more in depth 
-    free(mining_notify)
 }
