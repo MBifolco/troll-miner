@@ -1,11 +1,11 @@
 #include "wifi_connection.h"
-#include <string.h>
-#include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
-#include "nvs_flash.h"
+#include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "nvs_flash.h"
+#include <string.h>
 
 static const char *TAG = "WiFi";
 static EventGroupHandle_t wifi_event_group;
@@ -65,11 +65,12 @@ void wifi_init() {
 
     // Configure Wi-Fi with SSID and password
     wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = CONFIG_WIFI_SSID,
-            .password = CONFIG_WIFI_PASSWORD,
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-        },
+        .sta =
+            {
+                .ssid = CONFIG_WIFI_SSID,
+                .password = CONFIG_WIFI_PASSWORD,
+                .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+            },
     };
 
     ESP_LOGI(TAG, "Connecting to Wi-Fi SSID %s...", wifi_config.sta.ssid);

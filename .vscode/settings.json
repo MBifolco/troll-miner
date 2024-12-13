@@ -7,6 +7,10 @@
     "cstdint": "cpp",
     "chrono": "c",
     "pool.h": "c",
-    "sdkconfig.h": "c"
+    "sdkconfig.h": "c",
+    "stratum_message.h": "c",
+    "wifi_connection.h": "c",
+    "string.h": "c",
+    "sha256.h": "c"
   }
 }

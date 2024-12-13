@@ -13,16 +13,18 @@
 QueueHandle_t stratum_to_job_queue;
 
 void app_main() {
-    if (!CONFIG_MOCK_POOL) {
-        // Initialize Wi-Fi
-        wifi_init();
+#ifdef CONFIG_MOCK_POOL
+    TaskFunction_t pt = mock_pool_task;
+    ESP_LOGI("AppInit", "%s", MOCK_ENABLED_BANNER);
+#else
+    TaskFunction_t pt = pool_task;
 
-        // Wait for connection
-        wifi_wait_for_connection();
-    } else {
-        ESP_LOGI("AppInit", "%s", MOCK_ENABLED_BANNER);
-    }
+    // Initialize Wi-Fi
+    wifi_init();
 
+    // Wait for connection
+    wifi_wait_for_connection();
+#endif
     // Initialize the pool component
     pool_init();
 
@@ -35,7 +37,6 @@ void app_main() {
     }
 
     // Start the pool task - pick the one we need: mock or not?
-    TaskFunction_t pt = CONFIG_MOCK_POOL ? mock_pool_task : pool_task;
     xTaskCreate(pt, "pool_task", 4096, NULL, 5, NULL);
 
     xTaskCreate((TaskFunction_t)job_task, "job_task", 4096, NULL, 5, NULL);
