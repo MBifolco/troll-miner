@@ -25,13 +25,25 @@ void job_task(void *pvParameters) {
             format_mining_notify(received_job, log_buffer, sizeof(log_buffer));
             ESP_LOGI(TAG, "Received job from queue: %p", received_job);
             ESP_LOGI(TAG, "Received job: %s", log_buffer);
+            free(received_job->job_id);
+            free(received_job->prev_block_hash);
+            free(received_job->coinbase_prefix);
+            free(received_job->coinbase_suffix);
+            free(received_job->merkle_branches);
+            free(received_job);
         } else {
             ESP_LOGW(TAG, "Failed to receive job from the queue");
         }
 
+       
+
+
         // Yield to let other tasks run
         vTaskDelay(pdMS_TO_TICKS(10));
     }
+     // free mining_notify
+    
+
 }
 
 void format_mining_notify(const mining_notify *job, char *output, size_t output_size) {
@@ -50,3 +62,4 @@ void format_mining_notify(const mining_notify *job, char *output, size_t output_
              job->coinbase_suffix
     );
 }
+
