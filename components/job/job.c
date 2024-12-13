@@ -89,9 +89,10 @@ bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extran
 struct job *construct_job(mining_notify *notify) {
     struct job *j = malloc(sizeof(struct job)); // TODO: Check malloc succeeded aka j != NULL
     if (j == NULL) {
-        ESP_LOGE(TAG, "job allocation failed");
+        ESP_LOGE(TAG, "job malloc failed");
         return NULL;
     }
+
     memcpy(j->previous_block_hash, notify->prev_block_hash, HASH_SIZE);
     j->nbits = notify->nbits;
     j->version = notify->version;
@@ -110,17 +111,9 @@ struct job *construct_job(mining_notify *notify) {
     j->extranonce2[1] = 0x02;
 
     char *extranonce1 = "02\0"; // TODO: This comes from mining.subscribe
-    uint8_t *coinbase_tx_id = malloc(HASH_SIZE);
-    if (coinbase_tx_id == NULL) {
-        ESP_LOGE(TAG, "coinbase_tx_id construction failed");
-        free(j->extranonce2);
-        free(j);
-        return NULL;
-    }
-
+    uint8_t coinbase_tx_id[HASH_SIZE];
     bool res = build_coinbase_tx_id(coinbase_tx_id, notify, extranonce1, j); // TODO: check if coinbase_tx_id == NULL
     if (res == false) {
-        free(coinbase_tx_id);
         free(j->extranonce2);
         free(j);
         return NULL;
@@ -128,7 +121,18 @@ struct job *construct_job(mining_notify *notify) {
 
     print_hex(coinbase_tx_id, HASH_SIZE, HASH_SIZE, "Coinbase tx ID: ");
 
-    free(coinbase_tx_id);
+    uint8_t concatenated_branches[HASH_SIZE * 2];
+    uint8_t tmp[HASH_SIZE];
+    memcpy(concatenated_branches, coinbase_tx_id, HASH_SIZE);
+    for (int i = 0; i < notify->n_merkle_branches; ++i) {
+        memcpy(concatenated_branches + HASH_SIZE, notify->merkle_branches + HASH_SIZE * i, HASH_SIZE);
+        mbedtls_sha256(concatenated_branches, HASH_SIZE * 2, tmp, 0);
+        mbedtls_sha256(tmp, HASH_SIZE, j->merkle_tree_root, 0);
+        // Overwrite the first 32 bytes with the newly computed "merkle_tree_root" for the next round, if necessary
+        memcpy(concatenated_branches, j->merkle_tree_root, HASH_SIZE);
+    }
+    print_hex(j->merkle_tree_root, HASH_SIZE, HASH_SIZE, "Merkle Tree Root: ");
+
     return j;
 }
 
@@ -159,7 +163,7 @@ void job_task(void *pvParameters) {
              * a subsequent message can still be handled...
              */
             free(notify);
-            free(j); // Probably too soon to frees
+            free(j); // Probably too soon to free - also need to free all the internal mallocs!
         } else {
             ESP_LOGW(TAG, "Failed to receive job from the queue");
         }

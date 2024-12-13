@@ -5,7 +5,11 @@
 // #include "stratum_message.h"
 
 struct job {
-    uint8_t coinbase_tx_id[32];   // double_sha256 of coinbase tx built
+    /**
+     * TODO: Say we need to update extranonce2 - how do we rebuild coinbase tx?
+     *
+     * I'm getting the sense that even more needs to be copied/persisted from mining notify...
+     */
     uint8_t merkle_tree_root[32]; // merkle tree root is 32 bytes
     uint8_t previous_block_hash[32];
     uint8_t *extranonce2;
