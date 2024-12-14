@@ -61,6 +61,7 @@ bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extran
         goto free_from_extranonce1;
     }
 
+    // TODO: use strcat instead
     memcpy(cb_tx, coinbase_prefix, strlen(notify->coinbase_prefix) / 2);
     memcpy(cb_tx + extranonce1_offset, extranonce1_hex, strlen(extranonce1) / 2);
     memcpy(cb_tx + extranonce2_offset, j->extranonce2, j->extranonce2_len);
@@ -116,11 +117,13 @@ struct job *construct_job(mining_notify *notify) {
     }
 
     print_hex(coinbase_tx_id, HASH_SIZE, HASH_SIZE, "Coinbase tx ID: ");
+    ESP_LOGI(TAG, "Number of merkle branches: %d", notify->n_merkle_branches);
 
     uint8_t concatenated_branches[HASH_SIZE * 2];
     uint8_t tmp[HASH_SIZE];
     memcpy(concatenated_branches, coinbase_tx_id, HASH_SIZE);
     for (int i = 0; i < notify->n_merkle_branches; ++i) {
+        print_hex(notify->merkle_branches + HASH_SIZE * i, HASH_SIZE, 160, "merkle_branch: ");
         memcpy(concatenated_branches + HASH_SIZE, notify->merkle_branches + HASH_SIZE * i, HASH_SIZE);
         mbedtls_sha256(concatenated_branches, HASH_SIZE * 2, tmp, 0);
         mbedtls_sha256(tmp, HASH_SIZE, j->merkle_tree_root, 0);

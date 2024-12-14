@@ -81,6 +81,7 @@ void process_mining_notify(cJSON *json) {
         goto end_from_suffix;
     }
 
+    mining_notify->n_merkle_branches = n_merkle_branches;
     mining_notify->merkle_branches = malloc(HASH_SIZE * n_merkle_branches);
     if (!mining_notify->merkle_branches) {
         ESP_LOGE(TAG, "Failed to allocate memory for merkle branches");

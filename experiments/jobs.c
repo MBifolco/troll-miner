@@ -111,13 +111,13 @@ int main() {
     debug_msg("building mining_notify_message");
     struct mining_notify_message notify;
     notify.job_id = "674320f700005d59\0";
-    notify.previous_block_hash = "000000000002d01c1fccc21636b607dfd930d31d01c3a62104612a1719011250\0";
+    notify.previous_block_hash = "50120119172a610421a6c3011dd330d9df07b63616c2cc1f1cd0020000000000\0";
     notify.coinbase_prefix = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff08044c86041b\0";
     notify.coinbase_suffix = "ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457"
                              "516c5817242da796924ca4e99947d087fedf9ce467cb9f7c6287078f801df276fdf84ac00000000\0";
-    notify.version = "00000001\0";
+    notify.version = "01000000\0";
     notify.nbits = "4c86041b\0";
-    notify.time = "4d1b2237\0";
+    notify.time = "37221b4d\0";
 
     debug_msg("building mining_notify_message merkle_branches");
     // START: MERKLE BRANCH INPUT PREP
@@ -171,10 +171,6 @@ int main() {
     j->nonce[1] = 0x2b;
     j->nonce[2] = 0x57;
     j->nonce[3] = 0x10;
-
-    reverse_bytes(j->version, 4);
-    reverse_bytes(j->previous_block_hash, 32);
-    reverse_bytes(j->time, 4);
 
     /**
      * At this point, the "job" would be ready. Now let's validate by building the block header,

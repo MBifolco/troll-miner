@@ -3,7 +3,6 @@
   "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 160, IndentWidth: 4 }",
   "idf.adapterTargetName": "esp32s3",
   "files.associations": {
-    "*.sol": "solidity",
     "cstdint": "cpp",
     "chrono": "c",
     "pool.h": "c",
@@ -11,7 +10,8 @@
     "stratum_message.h": "c",
     "wifi_connection.h": "c",
     "string.h": "c",
-    "sha256.h": "c"
+    "sha256.h": "c",
+    "freertos.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
