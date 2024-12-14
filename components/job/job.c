@@ -61,7 +61,6 @@ bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extran
         goto free_from_extranonce1;
     }
 
-    // TODO: use strcat instead
     memcpy(cb_tx, coinbase_prefix, strlen(notify->coinbase_prefix) / 2);
     memcpy(cb_tx + extranonce1_offset, extranonce1_hex, strlen(extranonce1) / 2);
     memcpy(cb_tx + extranonce2_offset, j->extranonce2, j->extranonce2_len);
