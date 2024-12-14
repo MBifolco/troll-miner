@@ -31,30 +31,25 @@ uint8_t *coinbase_section_to_bytes(char *coinbase_str) {
 }
 
 bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extranonce1, struct job *j) {
+    bool ret = false;
     uint8_t *coinbase_prefix = coinbase_section_to_bytes(notify->coinbase_prefix);
     if (coinbase_prefix == NULL) {
         return false;
     }
     uint8_t *coinbase_suffix = coinbase_section_to_bytes(notify->coinbase_suffix);
     if (coinbase_suffix == NULL) {
-        free(coinbase_prefix);
-        return false;
+        goto free_from_prefix;
     }
 
     size_t extranonce1_hex_len = strlen(extranonce1) / 2;
     uint8_t *extranonce1_hex = malloc(extranonce1_hex_len);
     if (extranonce1_hex == NULL) {
-        free(coinbase_prefix);
-        free(coinbase_suffix);
-        return false;
+        goto free_from_suffix;
     }
 
     size_t res = hex2bin(extranonce1, extranonce1_hex, extranonce1_hex_len);
     if (res != extranonce1_hex_len) {
-        free(coinbase_prefix);
-        free(coinbase_suffix);
-        free(extranonce1_hex);
-        return false;
+        goto free_from_extranonce1;
     }
 
     uint8_t extranonce1_offset = strlen(notify->coinbase_prefix) / 2;
@@ -63,10 +58,7 @@ bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extran
     uint8_t cb_tx_len = cb_suffix_offset + strlen(notify->coinbase_suffix) / 2;
     uint8_t *cb_tx = malloc(cb_tx_len);
     if (cb_tx == NULL) {
-        free(coinbase_prefix);
-        free(coinbase_suffix);
-        free(extranonce1_hex);
-        return false;
+        goto free_from_extranonce1;
     }
 
     memcpy(cb_tx, coinbase_prefix, strlen(notify->coinbase_prefix) / 2);
@@ -78,16 +70,20 @@ bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extran
     uint8_t h[32];
     mbedtls_sha256(cb_tx, cb_tx_len, h, 0);
     mbedtls_sha256(h, HASH_SIZE, cb_tx_id, 0);
+    ret = true;
 
     free(cb_tx);
-    free(coinbase_prefix);
-    free(coinbase_suffix);
+free_from_extranonce1:
     free(extranonce1_hex);
-    return true;
+free_from_suffix:
+    free(coinbase_suffix);
+free_from_prefix:
+    free(coinbase_prefix);
+    return ret;
 }
 
 struct job *construct_job(mining_notify *notify) {
-    struct job *j = malloc(sizeof(struct job)); // TODO: Check malloc succeeded aka j != NULL
+    struct job *j = malloc(sizeof(struct job));
     if (j == NULL) {
         ESP_LOGE(TAG, "job malloc failed");
         return NULL;
@@ -99,8 +95,8 @@ struct job *construct_job(mining_notify *notify) {
     j->time = notify->time;
     j->nonce = 0;
 
-    j->extranonce2_len = 2;                      // TODO: This comes from mining.subscribe
-    j->extranonce2 = malloc(j->extranonce2_len); // TODO: check malloc res
+    j->extranonce2_len = 2; // TODO: This comes from mining.subscribe
+    j->extranonce2 = malloc(j->extranonce2_len);
     if (j->extranonce2 == NULL) {
         ESP_LOGE(TAG, "extranonce2 allocation failed");
         free(j);
@@ -112,7 +108,7 @@ struct job *construct_job(mining_notify *notify) {
 
     char *extranonce1 = "02\0"; // TODO: This comes from mining.subscribe
     uint8_t coinbase_tx_id[HASH_SIZE];
-    bool res = build_coinbase_tx_id(coinbase_tx_id, notify, extranonce1, j); // TODO: check if coinbase_tx_id == NULL
+    bool res = build_coinbase_tx_id(coinbase_tx_id, notify, extranonce1, j);
     if (res == false) {
         free(j->extranonce2);
         free(j);
@@ -158,11 +154,12 @@ void job_task(void *pvParameters) {
             log_notify(notify);
             struct job *j = construct_job(notify);
 
-            /**
-             * TODO: Double check if this is legit. It was allocated in stratum_message, but gotta make sure
-             * a subsequent message can still be handled...
-             */
+            free(notify->job_id);
+            free(notify->coinbase_prefix);
+            free(notify->coinbase_suffix);
+            free(notify->merkle_branches);
             free(notify);
+
             free(j); // Probably too soon to free - also need to free all the internal mallocs!
         } else {
             ESP_LOGW(TAG, "Failed to receive job from the queue");
@@ -171,4 +168,5 @@ void job_task(void *pvParameters) {
         // Yield to let other tasks run
         vTaskDelay(pdMS_TO_TICKS(10));
     }
+    // free mining_notify
 }
