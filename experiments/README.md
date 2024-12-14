@@ -234,11 +234,11 @@ But, how exactly do you build the header? The values read on http://mempool.spac
 
 _Endianess has entered the chat._
 
-After you have the values for the [block header](https://developer.bitcoin.org/reference/block_chain.html#block-headers), you need to ensure the expected byte ordering. Based on what
-`mining.notify` sent us:
-* `version` needs to be reversed
-* `previous_block_hash` needs to be reveresed
-* `time` needs to be reversed
+After you have the values for the [block header](https://developer.bitcoin.org/reference/block_chain.html#block-headers), the `mining.notify`
+message already has these values in little-endian:
+* `version`
+* `previous_block_hash`
+* `time`
 
 You'll likely ask "_What about the calculated `nonce` value?_" ASIC's produce `nonce` results in little-endian format, so no modification is necessary.
 
@@ -255,13 +255,14 @@ def r(a):
 ### Field Endianess Table
 |Field           |Received Format     |Usage in Block Header|
 |-----           |---------------     |---------------------|
-|prevhash        |Big-endian          |Little-endian|
+|prevhash        |Little-endian       |Little-endian|
 |coinbase1       |Hex string          |Used as-is|
 |coinbase2       |Hex string          |Used as-is|
 |extranonce1     |Hex string          |Used as-is|
 |extranonce2     |N/A                 |Used as-is|
-|merkle_branch   |Big-endian          |Big-endian (Merkle tree root)|
-|version         |Big-endian          |Little-endian|
-|nbits           |Big-endian          |Big-endian|
-|ntime           |Big-endian          |Little-endian|
+|merkle_branch   |Little-endian       |N/A|
+|merkle tree root|N/A                 |Little-endian|
+|version         |Little-endian       |Little-endian|
+|nbits           |Encoded             |Used as-is|
+|time            |Little-endian       |Little-endian|
 |nonce           |N/A                 |Little-endian|

@@ -46,10 +46,17 @@ menu "WiFi Configuration"
 
 endmenu
 
+menu "Testing Configuration"
+    config MOCK_POOL
+        bool "Mock Pool & WIFI"
+        help
+            Mock the pool & wifi. Will use mocked requests instead.
+endmenu
+
 menu "Pool Configuration"
     config POOL_PRIMARY_URL
         string "Primary POOL Address"
-        default "nyc.kano.is"
+        default "nya.kano.is"
         help
             The example will connect to this POOL pool address.
 
@@ -62,7 +69,7 @@ menu "Pool Configuration"
 
     config POOL_FALLBACK_URL
         string "Fallback POOL Address"
-        default "nyc.kano.is"
+        default "nya.kano.is"
         help
             The example will connect to this POOL pool address if the primary fails.
 

@@ -14,8 +14,7 @@ void flip32bytes(void *dest_p, const void *src_p);
 
 size_t hex2bin(const char *hex, uint8_t *bin, size_t bin_len);
 
-void print_hex(const uint8_t *b, size_t len,
-               const size_t in_line, const char *prefix);
+void print_hex(const uint8_t *b, size_t len, const size_t in_line, const char *prefix);
 
 char *double_sha256(const char *hex_string);
 
@@ -38,4 +37,4 @@ uint32_t flip32(uint32_t val);
 
 #define STRATUM_DEFAULT_VERSION_MASK 0x1fffe000
 
-#endif UTILS_H
+#endif
