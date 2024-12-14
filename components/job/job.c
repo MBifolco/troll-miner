@@ -20,8 +20,16 @@ void job_task(void *pvParameters) {
 
     while (true) {
         // Wait to receive a message from the stratum_to_job_queue
-        if (xQueueReceive(stratum_to_job_queue, &mining_notify, portMAX_DELAY) == pdPASS) {
-            ESP_LOGI(TAG, "Received job from queue: %p", mining_notify);
+        if (xQueueReceive(stratum_to_job_queue, &received_job, portMAX_DELAY) == pdPASS) {
+            format_mining_notify(received_job, log_buffer, sizeof(log_buffer));
+            ESP_LOGI(TAG, "Received job from queue: %p", received_job);
+            ESP_LOGI(TAG, "Received job: %s", log_buffer);
+            free(received_job->job_id);
+            free(received_job->prev_block_hash);
+            free(received_job->coinbase_prefix);
+            free(received_job->coinbase_suffix);
+            free(received_job->merkle_branches);
+            free(received_job);
         } else {
             ESP_LOGW(TAG, "Failed to receive job from the queue");
             vTaskDelay(pdMS_TO_TICKS(10));
@@ -43,8 +51,31 @@ void job_task(void *pvParameters) {
             free(mining_work); // Free memory if sending fails
         }
 
+       
+
+
         // Yield to let other tasks run
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-    // this probably needs to be more in depth 
+     // free mining_notify
+    
+
 }
+
+void format_mining_notify(const mining_notify *job, char *output, size_t output_size) {
+    if (job == NULL || output == NULL) {
+        snprintf(output, output_size, "Invalid mining_notify object");
+        return;
+    }
+
+    
+    snprintf(output, output_size,
+             "Job ID: %s, Prev Block Hash: %s, Coinbase Prefix: %s, "
+             "Coinbase Suffix: %s",
+             job->job_id,
+             job->prev_block_hash,
+             job->coinbase_prefix,
+             job->coinbase_suffix
+    );
+}
+
