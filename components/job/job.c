@@ -16,7 +16,8 @@ static const char *TAG = "JOB";
 void job_task(void *pvParameters) {
     ESP_LOGI(TAG, "Job task started");
 
-    mining_notify *mining_notify;
+    mining_notify *received_job;
+    char log_buffer[512]; // Buffer to hold the formatted string
 
     while (true) {
         // Wait to receive a message from the stratum_to_job_queue
