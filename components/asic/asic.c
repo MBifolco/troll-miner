@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "fayksic.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -57,6 +58,10 @@ void asic_task(void *pvParameters) {
             ESP_LOGI(TAG, "Received work from queue: %p", j);
             log_job(j);
             build_block_header(j);
+
+            // send work to asic
+            send_work(j);
+
             free(j->extranonce2);
             free(j);
         } else {
