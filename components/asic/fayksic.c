@@ -1,7 +1,8 @@
 #include "fayksic.h"
 #include "crc.h"
 #include "serial.h"
-//#include "utils.h"
+#include "utils.h"
+#include "job.h"
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -73,22 +74,32 @@ static void _send_work(uint8_t header, uint8_t * data, uint8_t data_len, bool de
     free(buf);
 }
 
-void send_work(job_work * job_work)
+void send_work(struct job *j)
 {
-    // local var
+    // Local variable to store the work to be sent
+
+    // print job
+    prettyHex(j, sizeof(struct job));
     work work;
+
+    // Update work ID, cycling through values with modulo 128
     id = (id + 8) % 128;
     work.work_id = id;
+
+    // Set the number of midstates (assuming fixed value)
     work.num_midstates = 0x01;
-    memcpy(&work.starting_nonce, &job_work->starting_nonce, 4);
-    memcpy(&work.nbits, &job_work->target, 4);
-    memcpy(&work.ntime, &job_work->ntime, 4);
-    memcpy(work.merkle_root, job_work->merkle_root_be, 32);
-    memcpy(work.prev_block_hash, job_work->prev_block_hash_be, 32);
-    memcpy(&work.version, &job_work->version, 4);
 
+    // Copy data from the job struct to the work struct
+    memcpy(work.merkle_root, j->merkle_tree_root, 32);
+    memcpy(work.prev_block_hash, j->previous_block_hash, 32);
+    memcpy(&work.version, &j->version, sizeof(uint32_t));
+    memcpy(&work.nbits, &j->nbits, sizeof(uint32_t));
+    memcpy(&work.ntime, &j->time, sizeof(uint32_t));
+    memcpy(&work.starting_nonce, &j->nonce, sizeof(uint32_t));
+
+    // Log the job being sent
     ESP_LOGI(TAG, "Send Job: %02X", work.work_id);
-
-
+    prettyHex((uint8_t *)&work, sizeof(work));
+    // Send the work to the ASIC
     _send_work((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), (uint8_t *)&work, sizeof(work), false);
 }
