@@ -13,7 +13,8 @@
     "sha256.h": "c",
     "freertos.h": "c",
     "queue_handles.h": "c",
-    "job.h": "c"
+    "job.h": "c",
+    "ratio": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
