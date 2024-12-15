@@ -4,6 +4,20 @@
   "idf.adapterTargetName": "esp32s3",
   "files.associations": {
     "cstdint": "cpp",
-    "chrono": "c"
-  }
+    "chrono": "c",
+    "pool.h": "c",
+    "sdkconfig.h": "c",
+    "stratum_message.h": "c",
+    "wifi_connection.h": "c",
+    "string.h": "c",
+    "sha256.h": "c",
+    "freertos.h": "c",
+    "queue_handles.h": "c",
+    "job.h": "c"
+  },
+  "idf.openOcdConfigs": [
+    "board/esp32s3-builtin.cfg"
+  ],
+  "idf.port": "/dev/ttyACM0",
+  "idf.flashType": "UART"
 }

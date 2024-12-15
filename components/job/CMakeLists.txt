@@ -6,6 +6,8 @@ INCLUDE_DIRS
     "include"
     "../stratum_message/include"
     "../../main/"
+    "../utils/include"
 REQUIRES
     "json"
+    "mbedtls"
 )
