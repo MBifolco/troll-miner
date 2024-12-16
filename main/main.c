@@ -12,6 +12,7 @@
 #include "job.h"
 #include "mock_pool.h"
 #include "pool.h"
+#include "serial.h"
 #include "queue_handles.h"
 #include "sdkconfig.h"
 #include "stratum_message.h"
@@ -44,6 +45,9 @@ void app_main() {
         printf("Failed to create queues!\n");
         return;
     }
+
+    // initialize serial connection to asic
+    SERIAL_init();
 
     // Start the pool task to listen to pool
     xTaskCreate(pt, "pool_task", 4096, NULL, 5, NULL);

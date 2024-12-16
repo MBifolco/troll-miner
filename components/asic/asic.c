@@ -1,5 +1,6 @@
 #include "asic.h"
 #include "esp_log.h"
+#include "fayksic.h"
 #include "job.h"
 #include "queue_handles.h"
 #include "utils.h"
@@ -58,6 +59,9 @@ void asic_task(void *pvParameters) {
             ESP_LOGI(TAG, "Received work from queue: %p", j);
             log_job(j);
             build_block_header(j);
+
+            // send work to asic
+            send_work(j);
 
             free(j->extranonce2);
             free(j);
