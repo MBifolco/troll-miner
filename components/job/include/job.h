@@ -2,7 +2,6 @@
 #define JOB_COMPONENT_H
 #include "stratum_message.h"
 #include <stdint.h>
-// #include "stratum_message.h"
 
 struct job {
     /**

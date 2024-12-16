@@ -162,9 +162,18 @@ void job_task(void *pvParameters) {
             free(notify->merkle_branches);
             free(notify);
 
-            free(j); // Probably too soon to free - also need to free all the internal mallocs!
+            if (j == NULL) {
+                ESP_LOGE(TAG, "Failed to allocate memory for mining_work");
+                vTaskDelay(pdMS_TO_TICKS(10));
+            } else if (xQueueSend(work_to_asic_queue, &j, portMAX_DELAY) != pdPASS) {
+                printf("Failed to send mining_work to queue!\n");
+                free(j->extranonce2);
+                free(j);
+            }
         } else {
             ESP_LOGW(TAG, "Failed to receive job from the queue");
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
         }
 
         // Yield to let other tasks run
