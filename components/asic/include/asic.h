@@ -2,11 +2,7 @@
 #define ASIC_COMPONENT_H
 #include <stdint.h>
 
-#define BLOCK_HEADER_SIZE 80
-
-struct block_header {
-    uint8_t bytes[BLOCK_HEADER_SIZE];
-};
+#define WORK_SIZE 82
 
 void asic_task(void *pvParameters);
 

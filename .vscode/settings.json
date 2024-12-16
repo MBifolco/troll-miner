@@ -14,7 +14,9 @@
     "freertos.h": "c",
     "queue_handles.h": "c",
     "job.h": "c",
-    "ratio": "c"
+    "ratio": "c",
+    "task.h": "c",
+    "queue.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"

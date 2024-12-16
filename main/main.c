@@ -12,9 +12,9 @@
 #include "job.h"
 #include "mock_pool.h"
 #include "pool.h"
-#include "serial.h"
 #include "queue_handles.h"
 #include "sdkconfig.h"
+#include "serial.h"
 #include "stratum_message.h"
 #include "wifi_connection.h"
 
@@ -39,7 +39,7 @@ void app_main() {
 
     // Create the queues
     stratum_to_job_queue = xQueueCreate(10, sizeof(mining_notify *));
-    work_to_asic_queue = xQueueCreate(10, sizeof(struct job));
+    work_to_asic_queue = xQueueCreate(10, BLOCK_HEADER_SIZE);
 
     if (stratum_to_job_queue == NULL || work_to_asic_queue == NULL) {
         printf("Failed to create queues!\n");

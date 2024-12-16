@@ -1,8 +1,9 @@
 #include "fayksic.h"
+#include "asic.h"
 #include "crc.h"
+#include "job.h"
 #include "serial.h"
 #include "utils.h"
-#include "job.h"
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -29,7 +30,7 @@
 #define TICKET_MASK 0x14
 #define MISC_CONTROL 0x18
 
-static const char * TAG = "Fayksic";
+static const char *TAG = "Fayksic";
 static uint8_t id = 0;
 
 /// @brief
@@ -37,14 +38,13 @@ static uint8_t id = 0;
 /// @param header
 /// @param data
 /// @param len
-static void _send_work(uint8_t header, uint8_t * data, uint8_t data_len, bool debug)
-{
+static void _send_work(uint8_t header, uint8_t *data, uint8_t data_len, bool debug) {
     ESP_LOGI(TAG, "Sending serialized data");
     packet_type_t packet_type = (header & TYPE_JOB) ? JOB_PACKET : CMD_PACKET;
     uint8_t total_length = (packet_type == JOB_PACKET) ? (data_len + 6) : (data_len + 5);
 
     // allocate memory for buffer
-    unsigned char * buf = malloc(total_length);
+    unsigned char *buf = malloc(total_length);
 
     // add the preamble
     buf[0] = 0x55;
@@ -74,32 +74,21 @@ static void _send_work(uint8_t header, uint8_t * data, uint8_t data_len, bool de
     free(buf);
 }
 
-void send_work(struct job *j)
-{
+void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     // Local variable to store the work to be sent
-
-    // print job
-    prettyHex(j, sizeof(struct job));
-    work work;
 
     // Update work ID, cycling through values with modulo 128
     id = (id + 8) % 128;
-    work.work_id = id;
+    uint8_t work[WORK_SIZE];
 
-    // Set the number of midstates (assuming fixed value)
-    work.num_midstates = 0x01;
-
-    // Copy data from the job struct to the work struct
-    memcpy(work.merkle_root, j->merkle_tree_root, 32);
-    memcpy(work.prev_block_hash, j->previous_block_hash, 32);
-    memcpy(&work.version, &j->version, sizeof(uint32_t));
-    memcpy(&work.nbits, &j->nbits, sizeof(uint32_t));
-    memcpy(&work.ntime, &j->time, sizeof(uint32_t));
-    memcpy(&work.starting_nonce, &j->nonce, sizeof(uint32_t));
+    // TODO: Do id & num_midstates belong "in the front" or "in the back"?
+    work[0] = id;
+    work[1] = 0x01; // Set the number of midstates (assuming fixed value)
+    memcpy(work + 2, block_header, BLOCK_HEADER_SIZE);
 
     // Log the job being sent
-    ESP_LOGI(TAG, "Send Job: %02X", work.work_id);
-    prettyHex((uint8_t *)&work, sizeof(work));
+    ESP_LOGI(TAG, "Send Job: %02X", work[0]);
+    prettyHex(work, WORK_SIZE);
     // Send the work to the ASIC
-    _send_work((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), (uint8_t *)&work, sizeof(work), false);
+    _send_work((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
 }
