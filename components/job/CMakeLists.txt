@@ -1,6 +1,7 @@
 idf_component_register(
 SRCS
     "job_task.c"
+    "utils.c"
 
 INCLUDE_DIRS 
     "include"
