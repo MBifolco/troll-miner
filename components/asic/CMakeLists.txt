@@ -1,6 +1,6 @@
 idf_component_register(
 SRCS
-    "asic.c"
+    "asic_request_task.c"
     "fayksic.c"
     "crc.c"
     "common.c"
