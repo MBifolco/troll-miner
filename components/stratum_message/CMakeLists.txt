@@ -11,4 +11,5 @@ INCLUDE_DIRS
 
 REQUIRES
     "json"
+    "driver"
 )

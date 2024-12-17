@@ -69,6 +69,9 @@ static void _send(uint8_t header, uint8_t *data, uint8_t data_len, bool debug) {
     }
 
     // send serial data
+    ESP_LOGI(TAG, "Sending %d bytes", total_length);
+    prettyHex(buf, total_length);
+    printf("\n");
     SERIAL_send(buf, total_length, debug);
 
     free(buf);
