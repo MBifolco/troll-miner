@@ -38,7 +38,7 @@ static uint8_t id = 0;
 /// @param header
 /// @param data
 /// @param len
-static void _send_work(uint8_t header, uint8_t *data, uint8_t data_len, bool debug) {
+static void _send(uint8_t header, uint8_t *data, uint8_t data_len, bool debug) {
     ESP_LOGI(TAG, "Sending serialized data");
     packet_type_t packet_type = (header & TYPE_JOB) ? JOB_PACKET : CMD_PACKET;
     uint8_t total_length = (packet_type == JOB_PACKET) ? (data_len + 6) : (data_len + 5);
@@ -90,5 +90,34 @@ void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     ESP_LOGI(TAG, "Send Job: %02X", work[0]);
     prettyHex(work, WORK_SIZE);
     // Send the work to the ASIC
-    _send_work((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
+    _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
+}
+
+void send_job_difficulty(int difficulty)
+{
+
+    // Default mask of 256 diff
+    unsigned char job_difficulty_mask[9] = {0x00, TICKET_MASK, 0b00000000, 0b00000000, 0b00000000, 0b11111111};
+
+    // The mask must be a power of 2 so there are no holes
+    // Correct:  {0b00000000, 0b00000000, 0b11111111, 0b11111111}
+    // Incorrect: {0b00000000, 0b00000000, 0b11100111, 0b11111111}
+    // (difficulty - 1) if it is a pow 2 then step down to second largest for more hashrate sampling
+    difficulty = _largest_power_of_two(difficulty) - 1;
+
+    // convert difficulty into char array
+    // Ex: 256 = {0b00000000, 0b00000000, 0b00000000, 0b11111111}, {0x00, 0x00, 0x00, 0xff}
+    // Ex: 512 = {0b00000000, 0b00000000, 0b00000001, 0b11111111}, {0x00, 0x00, 0x01, 0xff}
+    for (int i = 0; i < 4; i++) {
+        char value = (difficulty >> (8 * i)) & 0xFF;
+        // The char is read in backwards to the register so we need to reverse them
+        // So a mask of 512 looks like 0b00000000 00000000 00000001 1111111
+        // and not 0b00000000 00000000 10000000 1111111
+
+        job_difficulty_mask[5 - i] = _reverse_bits(value);
+    }
+
+    ESP_LOGI(TAG, "Setting job ASIC mask to %d", difficulty);
+
+    _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 6, false);
 }
