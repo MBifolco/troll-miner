@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "queue_handles.h"
+#include "fayksic.h"
 #include "utils.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -142,10 +143,11 @@ void check_queue_items() {
 
 void process_mining_set_difficulty(cJSON *json) {
     ESP_LOGI(TAG, "build set difficulty object to send to job queue");
-    // cJSON * params = cJSON_GetObjectItem(json, "params");
-    // mining_set_difficulty * mining_set_difficulty = malloc(sizeof(mining_set_difficulty));
-    // mining_set_difficulty->difficulty = cJSON_GetArrayItem(params, 0)->valueint;
-    //  call whatever function will be handling set difficulty on asic
+    cJSON * params = cJSON_GetObjectItem(json, "params");
+    mining_set_difficulty * mining_set_difficulty = malloc(sizeof(mining_set_difficulty));
+    mining_set_difficulty->difficulty = cJSON_GetArrayItem(params, 0)->valueint;
+    
+    send_job_difficulty(mining_set_difficulty->difficulty);
 }
 
 void process_mining_set_version_mask(cJSON *json) {
