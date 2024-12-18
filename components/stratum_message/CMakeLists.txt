@@ -6,8 +6,10 @@ INCLUDE_DIRS
     "include"
     "../job/include"
     "../utils/include"
+    "../asic/include"
     "../../main/"
 
 REQUIRES
     "json"
+    "driver"
 )
