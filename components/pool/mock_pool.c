@@ -11,6 +11,9 @@ static const char *messages[] = {
     // Response to mining.subscribe - the id -f 2 tells us this - its the id we sent with our request
     "{\"result\":[[\"mining.notify\",\"677a0966\"]],\"19865d67\",8],\"id\":2,\"error\":null}",
     
+    // Request set difficulty
+    "{\"id\": null, \"method\": \"mining.set_difficulty\", \"params\": [1024]}",
+
     // Request mining notification
     "{\"id\":null,\"method\":\"mining.notify\",\"params\": "
     "[\"674320f700005d59\",\"50120119172a610421a6c3011dd330d9df07b63616c2cc1f1cd0020000000000\","
@@ -18,9 +21,7 @@ static const char *messages[] = {
     "\"ffffffff0100f2052a010000004341041b0e8c2567c12536aa13357b79a073dc4444acb83c4ec7a0e2f99dd7457516c5817242da796924ca4e99947d087fe"
     "df9ce467cb9f7c6287078f801df276fdf84ac00000000\",[\"c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff\", "
     "\"49aef42d78e3e9999c9e6ec9e1dddd6cb880bf3b076a03be1318ca789089308e\"],\"01000000\",\"4c86041b\",\"37221b4d\",true]}\0",
-    
-    // Request set difficulty
-    "{\"id\": null, \"method\": \"mining.set_difficulty\", \"params\": [512]}",
+        
 };
 
 // Corresponding delays (in milliseconds) between messages
