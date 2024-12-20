@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +42,8 @@ void calc_target32(uint8_t *target, double diff) {
         dcut32 = d32 / segments[i];
         h32 = dcut32;
         data32 = (uint32_t *)(target + segment_offsets_in_target[i]);
-        *data32 = htole32(h32);
+        // *data32 = htole32(h32);
+        *data32 = h32;
         dcut32 = h32;
         dcut32 *= segments[i];
         d32 -= dcut32;
@@ -49,7 +51,8 @@ void calc_target32(uint8_t *target, double diff) {
 
     h32 = d32;
     data32 = (uint32_t *)(target);
-    *data32 = htole32(h32);
+    // *data32 = htole32(h32);
+    *data32 = h32;
 }
 
 void calc_target64(uint8_t *target, double diff) {
@@ -89,8 +92,13 @@ void calc_target64(uint8_t *target, double diff) {
 }
 
 void calc_mask(uint8_t *mask, uint8_t *target) {
-    for (int i = 0; i < 32; i++) {
-        if (target[i] > 0) {
+    bool sig_found = false;
+    for (int i = 31; i >= 0; i--) {
+        if (target[i] > 0 && !sig_found) {
+            // Retain the upper bound
+            mask[i] = target[i];
+            sig_found = true;
+        } else if (target[i] > 0 && sig_found) {
             mask[i] = 0xff;
         } else {
             mask[i] = 0;
