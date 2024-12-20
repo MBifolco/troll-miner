@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,17 +68,22 @@ int main(int argc, char *argv[]) {
     /**
      * TODO CLI args:
      * - direction (i.e. diff2target vs target2diff)
-     * - support huge numbers (i.e. uint32_t / unsigned long)
      */
 
     if (argc != 2) {
         printf("Please provide a difficulty value you'd like transformed into a target and mask.\n");
     }
 
-    // TODO: #s > MAX_INT will produce undefined behavior. Should use something like strtol for more robust support
-    int diff = atoi(argv[1]);
+    char *p;
+    double diff = strtod(argv[1], &p);
+    if (diff == 0) {
+        /* If the value provided was out of range, display a warning message */
+        if (errno == ERANGE)
+            printf("The value provided was out of range\n");
+    }
+
     uint8_t target[32];
-    calc_target(target, (double)diff);
+    calc_target(target, diff);
     printf("Target:\t");
     for (int i = 31; i >= 0; i--) {
         printf("%02x", target[i]);
