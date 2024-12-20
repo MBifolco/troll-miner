@@ -2,9 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* truediffone == 0x00000000FFFF0000000000000000000000000000000000000000000000000000
+/**
+ * SOURCE: https://github.com/kanoi/cgminer/blob/master/cgminer.c#L7843 - set_target
+ *
+ * truediffone == 0x00000000FFFF0000000000000000000000000000000000000000000000000000
  * Generate a 256 bit binary LE target by cutting up diff into 64 bit sized
- * portions or vice versa. */
+ * portions or vice versa.
+ *
+ * calc_target === cgminer set_target
+ */
 static const double truediffone = 26959535291011309493156476344723991336010898738574164086137773096960.0;
 static const double bits192 = 6277101735386680763835789423207666416102355444464034512896.0;
 static const double bits128 = 340282366920938463463374607431768211456.0;
@@ -19,6 +25,7 @@ void calc_target(uint8_t *target, double diff) {
 
     dcut64 = d64 / bits192;
     h64 = dcut64;
+
     data64 = (uint64_t *)(target + 24);
     *data64 = htole64(h64);
     dcut64 = h64;
@@ -72,7 +79,7 @@ int main(int argc, char *argv[]) {
     uint8_t target[32];
     calc_target(target, (double)diff);
     printf("Target:\t");
-    for (int i = 0; i < 32; i++) {
+    for (int i = 31; i >= 0; i--) {
         printf("%02x", target[i]);
     }
     printf("\n");
@@ -80,7 +87,7 @@ int main(int argc, char *argv[]) {
     uint8_t mask[32];
     calc_mask(mask, target);
     printf("Mask:\t");
-    for (int i = 0; i < 32; i++) {
+    for (int i = 31; i >= 0; i--) {
         printf("%02x", mask[i]);
     }
     printf("\n");
