@@ -10,7 +10,7 @@
  * Generate a 256 bit binary LE target by cutting up diff into 64 bit sized
  * portions or vice versa.
  *
- * calc_target === cgminer set_target
+ * calc_target64 === cgminer set_target
  */
 static const double truediffone = 26959535291011309493156476344723991336010898738574164086137773096960.0;
 static const double bits192 = 6277101735386680763835789423207666416102355444464034512896.0;
@@ -24,10 +24,12 @@ void calc_target32(uint8_t *target, double diff) {
     uint32_t *data32, h32;
     double d32, dcut32;
     /**
-     * We have to start from bits192, because there truediffone is 0x00000000FFFF....
-     * meaning there's already an offset - so to do the 32bit equivalent operations of
-     * target calc, we start at bits192, offset 24 in target, to account for the first
-     * 4 bytes of truediffone being 0. After that, we can proceed with 32 bit segments.
+     * We have to start from bits192, because truediffone is 0x00000000FFFF....
+     * there's a predetermined offset of 4 bytes set to 0 - so even when doing the 32-bit equivalent operations of
+     * set_target, we must also start at bits192 // offset 24 in target. Both account for bits 224 through 256
+     * of truediffone being 0. After that, we can proceed with 32 bit segments.
+     *
+     * It's something along these lines, I'm tired...
      */
     double segments[6] = {bits192, bits160, bits128, bits96, bits64, bits32};
     uint8_t segment_offsets_in_target[6] = {24, 20, 16, 12, 8, 4};
