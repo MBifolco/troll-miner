@@ -1,8 +1,78 @@
+/**
+ * Compile:
+ * gcc target_v_difficulty.c
+ *
+ * Usage:
+ * ./a.out 442
+ * ./a.out 1
+ * ./a.out 4284.532
+ * ./a.out 108522647629298.2
+ */
+
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+void ESP32_calc_target(double diff) {
+    /**
+     * ESP32s operate on a 32-bit architecture, so the following has been tuned for that,
+     * specifically using 32-bit unsigned integer types.
+     *
+     * Once you start pumping numbers near 2^32 - 1 (i.e. 4,294,967,295) the result is just 0s
+     * because those numbers are too big and this isn't precise enough. But if we can get an ESP32
+     * to handle enough ASICs where a mining pool would return a pool difficulty in the billions,
+     * I'd say that's a pretty good problem, but we can also deal with it later and optimize for
+     * efficient target computation within the architecture we'll exist in.
+     *
+     * The other functions i.e. kano's algorithm, are better suited for huge numbers, i.e.
+     * current network difficulty (Dec 21, 2024 @ 108,522,647,629,298.2).
+     *
+     * This is effectively the "long division" algorithm. It's also worth mentioning it's faster
+     * to avoid using the % operator to compute the remainder.
+     *
+     * Reasoning:
+     * Addition/Subtraction: Very fast (1 cycle or close to 1 cycle).
+     * Multiplication: Slightly slower (often 3–6 cycles, depending on the microcontroller).
+     * Division/Modulus: Significantly slower (10–40 cycles or more, depending on the size of the numbers).
+     *
+     * On a 32-bit microcontroller:
+     * a % b for uint32_t involves a full division (a / b) and an additional multiplication and subtraction to compute the remainder.
+     *
+     * For uint64_t, the cost increases substantially because it requires emulating 64-bit division using multiple 32-bit operations.
+     */
+    const uint32_t n_truediffone[8] = {0, 0, 0, 0, 0, 0, 0xFFFF0000, 0};
+    uint32_t current = 0;
+    uint32_t result[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    // for (int i = 7; i >= 0; i--) {
+    //     // Get the current chunk
+    //     current = (current << 31) | n_truediffone[i];
+    //     // Store the result
+    //     result[i] = (uint32_t)(current / diff);
+    //     // Pull out the remainder
+    //     current %= (uint32_t)diff;
+    // }
+
+    // Alternative to above, but w/out % op
+    for (int i = 7; i >= 0; i--) {
+        // Get the current chunk
+        current = (current << 31) | n_truediffone[i];
+
+        // Store the result
+        result[i] = (uint32_t)(current / diff);
+
+        // Pull out the remainder
+        current = current - (result[i] * diff);
+    }
+
+    printf("ESP32 Target:\t");
+    for (int i = 7; i >= 0; i--) {
+        printf("%08x", result[i]);
+    }
+    printf("\n");
+}
 
 /**
  * SOURCE: https://github.com/kanoi/cgminer/blob/master/cgminer.c#L7843 - set_target
@@ -31,6 +101,8 @@ void calc_target32(uint8_t *target, double diff) {
      * of truediffone being 0. After that, we can proceed with 32 bit segments.
      *
      * It's something along these lines, I'm tired...
+     *
+     * ALSO: This is a psuedo-32 bit algorithm...we're using doubles all over the place (aka 64 bits).
      */
     double segments[6] = {bits192, bits160, bits128, bits96, bits64, bits32};
     uint8_t segment_offsets_in_target[6] = {24, 20, 16, 12, 8, 4};
@@ -125,6 +197,8 @@ int main(int argc, char *argv[]) {
     }
 
     uint8_t target[32];
+
+    ESP32_calc_target(diff);
 
     calc_target32(target, diff);
     printf("Target (32bit):\t");
