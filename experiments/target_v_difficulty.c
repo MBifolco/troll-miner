@@ -46,7 +46,7 @@ void ESP32_calc_target(double diff) {
         printf("ESP32 Target: Cannot compute target - difficulty > %d\n", INT32_MAX);
         return;
     }
-    const uint32_t n_truediffone[8] = {0, 0, 0, 0, 0, 0, 0xFFFF0000, 0};
+    const uint32_t n_truediffone[8] = {0, 0xFFFF0000, 0, 0, 0, 0, 0, 0};
     uint32_t current = 0;
     uint32_t result[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -72,7 +72,7 @@ void ESP32_calc_target(double diff) {
     }
 
     printf("ESP32 Target:\t");
-    for (int i = 7; i >= 0; i--) {
+    for (int i = 0; i < 7; i++) {
         printf("%08x", result[i]);
     }
     printf("\n");
