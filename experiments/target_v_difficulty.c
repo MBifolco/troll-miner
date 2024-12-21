@@ -72,7 +72,7 @@ void ESP32_calc_target(double diff) {
     }
 
     printf("ESP32 Target:\t");
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         printf("%08x", result[i]);
     }
     printf("\n");
