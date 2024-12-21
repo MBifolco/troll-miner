@@ -42,6 +42,10 @@ void ESP32_calc_target(double diff) {
      *
      * For uint64_t, the cost increases substantially because it requires emulating 64-bit division using multiple 32-bit operations.
      */
+    if (diff > INT32_MAX) {
+        printf("ESP32 Target: Cannot compute target - difficulty > %d\n", INT32_MAX);
+        return;
+    }
     const uint32_t n_truediffone[8] = {0, 0, 0, 0, 0, 0, 0xFFFF0000, 0};
     uint32_t current = 0;
     uint32_t result[8] = {0, 0, 0, 0, 0, 0, 0, 0};
