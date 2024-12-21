@@ -92,18 +92,18 @@ void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     // Log the job being sent
     ESP_LOGI(TAG, "Send Job: %02X", work[0]);
     prettyHex(work, WORK_SIZE);
+    printf("\n");
     // Send the work to the ASIC
     _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
 }
 
-void send_job_difficulty(int difficulty)
-{
+void send_job_difficulty(int difficulty) {
 
     // Default mask of 256 diff
-    unsigned char job_difficulty_mask[9] = {0x00, TICKET_MASK, 0b00000000, 0b00000000, 0b00000000, 0b11111111};
+    unsigned char job_difficulty_mask[6] = {0x00, TICKET_MASK, 0b00000000, 0b00000000, 0b00000000, 0b11111111};
 
     // The mask must be a power of 2 so there are no holes
-    // Correct:  {0b00000000, 0b00000000, 0b11111111, 0b11111111}
+    // Correct:   {0b00000000, 0b00000000, 0b11111111, 0b11111111}
     // Incorrect: {0b00000000, 0b00000000, 0b11100111, 0b11111111}
     // (difficulty - 1) if it is a pow 2 then step down to second largest for more hashrate sampling
     difficulty = _largest_power_of_two(difficulty) - 1;
@@ -120,7 +120,7 @@ void send_job_difficulty(int difficulty)
         job_difficulty_mask[5 - i] = _reverse_bits(value);
     }
 
-    ESP_LOGI(TAG, "Setting job ASIC mask to %d", difficulty);
+    ESP_LOGI(TAG, "Setting ASIC mask to %d", difficulty);
 
     _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 6, false);
 }
