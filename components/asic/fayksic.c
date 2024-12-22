@@ -135,6 +135,7 @@ void send_job_difficulty(uint32_t difficulty) {
     split_uint32_to_bytes(result[0], job_difficulty_mask, 2);
     split_uint32_to_bytes(result[1], job_difficulty_mask, 6);
 
+    // TODO: move to fn
     bool signifcants = false;
     for (int i = 2; i < 10; ++i) {
         if (job_difficulty_mask[i] > 0) {
