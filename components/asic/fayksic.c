@@ -97,30 +97,49 @@ void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
 }
 
-void send_job_difficulty(int difficulty) {
+void split_uint32_to_bytes(uint32_t value, uint8_t *bytes, uint8_t idx) {
+    bytes[idx + 0] = (value >> 24) & 0xFF; // Extract the most significant byte
+    bytes[idx + 1] = (value >> 16) & 0xFF; // Extract the second most significant byte
+    bytes[idx + 2] = (value >> 8) & 0xFF;  // Extract the second least significant byte
+    bytes[idx + 3] = value & 0xFF;         // Extract the least significant byte
+}
 
-    // Default mask of 256 diff
-    unsigned char job_difficulty_mask[6] = {0x00, TICKET_MASK, 0b00000000, 0b00000000, 0b00000000, 0b11111111};
+// TODO: Find & update send_job_diff refs
+void send_job_difficulty(uint32_t difficulty) {
+    /**
+     * This algorithm produces a target that should be "good enough" for an ESP32 miner.
+     * We lose all precision after bit 64, but it keeps up with other algorithms that work
+     * with 64-bit integers up to that point. They are better suited to accurately track the
+     * full dividend. This was a choice to optimize the target calculations for the 32-bit
+     * architecture of the ESP32.
+     */
+    uint32_t current_32bits = 0;
+    uint32_t result[2] = {0, 0};
 
-    // The mask must be a power of 2 so there are no holes
-    // Correct:   {0b00000000, 0b00000000, 0b11111111, 0b11111111}
-    // Incorrect: {0b00000000, 0b00000000, 0b11100111, 0b11111111}
-    // (difficulty - 1) if it is a pow 2 then step down to second largest for more hashrate sampling
-    difficulty = _largest_power_of_two(difficulty) - 1;
+    // We're only going to get info about the first 2 32-bit chunks, so don't bother w/ the rest
+    for (int i = 2; i >= 0; i--) {
+        // Get the current chunk
+        current_32bits = (current_32bits << 31) | TRUEDIFFONE[i];
 
-    // convert difficulty into char array
-    // Ex: 256 = {0b00000000, 0b00000000, 0b00000000, 0b11111111}, {0x00, 0x00, 0x00, 0xff}
-    // Ex: 512 = {0b00000000, 0b00000000, 0b00000001, 0b11111111}, {0x00, 0x00, 0x01, 0xff}
-    for (int i = 0; i < 4; i++) {
-        char value = (difficulty >> (8 * i)) & 0xFF;
-        // The char is read in backwards to the register so we need to reverse them
-        // So a mask of 512 looks like 0b00000000 00000000 00000001 1111111
-        // and not 0b00000000 00000000 10000000 1111111
+        // Store the result
+        result[i] = current_32bits / difficulty;
 
-        job_difficulty_mask[5 - i] = _reverse_bits(value);
+        // Pull out the remainder
+        current_32bits = current_32bits - (result[i] * difficulty);
     }
 
-    ESP_LOGI(TAG, "Setting ASIC mask to %d", difficulty);
+    // 2 for command, 8 for target mask
+    uint8_t job_difficulty_mask[10];
+    job_difficulty_mask[0] = 0x00;
+    job_difficulty_mask[1] = TICKET_MASK;
+    split_uint32_to_bytes(result[0], job_difficulty_mask, 2);
+    split_uint32_to_bytes(result[1], job_difficulty_mask, 6);
 
-    _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 6, false);
+    ESP_LOGI(TAG, "ASIC difficulty mask payload: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%02x", job_difficulty_mask[i]);
+    }
+    printf("\n");
+
+    _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 10, false);
 }
