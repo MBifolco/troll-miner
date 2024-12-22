@@ -135,6 +135,25 @@ void send_job_difficulty(uint32_t difficulty) {
     split_uint32_to_bytes(result[0], job_difficulty_mask, 2);
     split_uint32_to_bytes(result[1], job_difficulty_mask, 6);
 
+    bool signifcants = false;
+    for (int i = 2; i < 10; ++i) {
+        if (job_difficulty_mask[i] > 0) {
+            if (signifcants) {
+                job_difficulty_mask[i] = 0xff;
+            } else {
+                signifcants = true;
+                if (job_difficulty_mask[i] >> 4 > 0) {
+                    job_difficulty_mask[i] = 0xff;
+                } else {
+                    job_difficulty_mask[i] = 0x0f;
+                }
+            }
+        } else if (signifcants) {
+            // We just started hitting 0s again - we're done
+            break;
+        }
+    }
+
     ESP_LOGI(TAG, "ASIC difficulty mask payload: ");
     for (int i = 0; i < 10; i++) {
         printf("%02x", job_difficulty_mask[i]);
