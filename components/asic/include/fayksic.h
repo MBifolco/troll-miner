@@ -33,5 +33,5 @@ typedef enum {
 } packet_type_t;
 
 void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]);
-void send_job_difficulty(int difficulty);
+void send_job_difficulty(uint32_t difficulty);
 #endif /* FAYKSIC_H_ */
