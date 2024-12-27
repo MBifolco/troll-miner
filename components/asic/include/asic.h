@@ -4,6 +4,7 @@
 
 #define WORK_SIZE 82
 
-void asic_task(void *pvParameters);
+void asic_request_task(void *pvParameters);
+void asic_result_listener_task(void *pvParameters);
 
 #endif // ASIC_COMPONENT_H

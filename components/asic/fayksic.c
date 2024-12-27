@@ -164,8 +164,11 @@ void send_job_difficulty(uint32_t difficulty) {
     job_difficulty_mask[0] = 0x00;
     job_difficulty_mask[1] = TICKET_MASK;
     uint32_t power_of_2 = closest_power_of_2_minus_1(result[1], result[0]);
+    ESP_LOGI(TAG, "Provided difficulty: %lu", difficulty);
+    ESP_LOGI(TAG, "Result: 0x%08lx%08lx", result[1], result[0]);
+    ESP_LOGI(TAG, "Closest power of 2 - 1: 0x%08lx", power_of_2);
 
-    // TODO: Reverse the bits - however, what in what endianness should they be reversed?
+    // TODO: Reverse the bits?
     for (int i = 9; i >= 2; i--) {
         job_difficulty_mask[i] = (uint8_t)(power_of_2 & 0xFF);
         power_of_2 >>= 8;

@@ -12,9 +12,9 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
-static const char *TAG = "ASIC";
+static const char *TAG = "ASIC_REQUEST";
 
-void asic_task(void *pvParameters) {
+void asic_request_task(void *pvParameters) {
     ESP_LOGI(TAG, "Asic task started");
 
     uint8_t block_header[BLOCK_HEADER_SIZE];
