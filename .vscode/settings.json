@@ -17,7 +17,8 @@
     "ratio": "c",
     "task.h": "c",
     "queue.h": "c",
-    "asic.h": "c"
+    "asic.h": "c",
+    "diff_utils.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"

@@ -11,7 +11,7 @@ static const char *messages[] = {
     "{\"result\":[[\"mining.notify\",\"677a0966\"]],\"19865d67\",8],\"id\":2,\"error\":null}",
 
     // Request set difficulty
-    "{\"id\": null, \"method\": \"mining.set_difficulty\", \"params\": [1]}",
+    "{\"id\": null, \"method\": \"mining.set_difficulty\", \"params\": [1024]}",
 
     // Request mining notification
     "{\"id\":null,\"method\":\"mining.notify\",\"params\": "

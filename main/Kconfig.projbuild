@@ -51,6 +51,11 @@ menu "Testing Configuration"
         bool "Mock Pool & WIFI"
         help
             Mock the pool & wifi. Will use mocked requests instead.
+
+    config SCALE_TRUEDIFF
+        bool "Scale value of truediffone to make target masks easier"
+        help
+            Use a 0xFFFF... value for truediffone to get faster nonce results
 endmenu
 
 menu "Pool Configuration"

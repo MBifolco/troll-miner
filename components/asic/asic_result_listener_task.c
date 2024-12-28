@@ -17,7 +17,7 @@ void asic_result_listener_task(void *pvParameters) {
         if (bytes_read < 0) {
             ESP_LOGE(TAG, "UART error reading data");
         } else if (bytes_read == 0) {
-            ESP_LOGI(TAG, "UART timed out - no data received");
+            ESP_LOGD(TAG, "UART timed out - no data received");
         } else {
             char h[BUFF_SIZE * 2];
             to_hex_string(buf, h, bytes_read);

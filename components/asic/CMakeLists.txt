@@ -6,6 +6,7 @@ SRCS
     "crc.c"
     "common.c"
     "serial.c"
+    "diff_utils.c"
 
 INCLUDE_DIRS 
     "include"
