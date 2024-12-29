@@ -55,7 +55,7 @@ menu "Testing Configuration"
     config SCALE_TRUEDIFF
         bool "Scale value of truediffone to make target masks easier"
         help
-            Use a 0xFFFF... value for truediffone to get faster nonce results
+            Use a 0x00FF... value for truediffone to get faster nonce results
 endmenu
 
 menu "Pool Configuration"

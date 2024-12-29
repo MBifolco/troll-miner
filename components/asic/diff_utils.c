@@ -25,9 +25,9 @@ void generate_target_mask(uint32_t input[2], uint32_t result[2]) {
     int msb_pos_high = msb_position_32(input[0]);
     int msb_pos_low = msb_position_32(input[1]);
     int msb_position = msb_pos_high >= 0 ? msb_pos_high + 32 : msb_pos_low;
-    ESP_LOGI("DIFF_UTILS", "mbs_pos_high: %d", msb_pos_high);
-    ESP_LOGI("DIFF_UTILS", "msb_pos_low: %d", msb_pos_low);
-    ESP_LOGI("DIFF_UTILS", "msb_position: %d", msb_position);
+    ESP_LOGD("DIFF_UTILS", "mbs_pos_high: %d", msb_pos_high);
+    ESP_LOGD("DIFF_UTILS", "msb_pos_low: %d", msb_pos_low);
+    ESP_LOGD("DIFF_UTILS", "msb_position: %d", msb_position);
 
     if (msb_position == -1) { // Input is 0
         result[0] = 0;
