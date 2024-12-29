@@ -11,7 +11,7 @@ typedef struct __attribute__((__packed__)) {
 } task_result;
 
 #ifdef CONFIG_SCALE_TRUEDIFF
-static const uint32_t TRUEDIFFONE[8] = {0xFFFF0000, 0, 0, 0, 0, 0, 0, 0};
+static const uint32_t TRUEDIFFONE[8] = {0x00FFFFFF, 0, 0, 0, 0, 0, 0, 0};
 #else
 static const uint32_t TRUEDIFFONE[8] = {0, 0xFFFF0000, 0, 0, 0, 0, 0, 0};
 #endif
