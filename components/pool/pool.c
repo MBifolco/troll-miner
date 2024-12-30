@@ -1,15 +1,15 @@
 #include "pool.h"
-#include "stratum_message.h"
 #include "esp_log.h"
-#include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/task.h"
+#include "lwip/sockets.h"
 #include "sdkconfig.h"
+#include "stratum_message.h"
+#include <arpa/inet.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <lwip/tcpip.h>
-#include <arpa/inet.h>
 #include <netdb.h>
 
 static const char *TAG = "Pool";
@@ -17,8 +17,10 @@ static const char *TAG = "Pool";
 static int pool_socket = -1;
 static EventGroupHandle_t pool_event_group;
 static const int POOL_CONNECTED_BIT = BIT0;
+
 // set incrementable message id
 static int message_id = 1;
+
 // Function to connect to the pool
 static int pool_connect() {
     ESP_LOGI(TAG, "Connecting to pool at %s:%d", CONFIG_POOL_PRIMARY_URL, CONFIG_POOL_PRIMARY_PORT);
@@ -29,7 +31,6 @@ static int pool_connect() {
         ESP_LOGE(TAG, "Failed to create socket");
         return -1;
     }
-
 
     // Resolve hostname to IP address
     struct addrinfo hints, *res, *p;
@@ -80,14 +81,13 @@ static int pool_connect() {
             ESP_LOGE(TAG, "Failed to connect to %s", ip_address);
         }
     }
-     // Clean up if connection fails
+    // Clean up if connection fails
     ESP_LOGE(TAG, "Failed to connect to any resolved IP addresses");
     freeaddrinfo(res);
     close(pool_socket);
     pool_socket = -1;
-    return -1;    
+    return -1;
 }
-
 
 // Function to receive data from the pool
 static int pool_receive(char *buffer, size_t buffer_len) {
@@ -170,21 +170,21 @@ int pool_send(const char *message) {
 
 int configure_version_rolling() {
     // Example: Send a version rolling message
-    //const char *version_rolling_msg = "{\"id\": %d, \"method\": \"mining.configure\", \"params\": [{\"version-rolling.mask\": \"0x0000000f\", \"version-rolling.min-difficulty\": 1, \"version-rolling.max-difficulty\": 1, \"version-rolling.threshold\": 1}]}\n";
+    // const char *version_rolling_msg = "{\"id\": %d, \"method\": \"mining.configure\", \"params\": [{\"version-rolling.mask\": \"0x0000000f\",
+    // \"version-rolling.min-difficulty\": 1, \"version-rolling.max-difficulty\": 1, \"version-rolling.threshold\": 1}]}\n";
     char version_rolling_msg[1024];
     sprintf(version_rolling_msg,
             "{\"id\": %d, "
             "\"method\": \"mining.configure\", "
             "\"params\": [[\"version-rolling\"], {\"version-rolling.mask\": \"ffffffff\"}]}\n",
             message_id);
-    
-    
+
     return pool_send(version_rolling_msg);
 }
 
 int subscribe_to_pool() {
     // Example: Send a subscription message
-    //const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
+    // const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
     char subscribe_msg[1024];
     sprintf(subscribe_msg, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\"trollminer\"]}\n", message_id);
     return pool_send(subscribe_msg);
@@ -192,7 +192,7 @@ int subscribe_to_pool() {
 
 int authenticate_with_pool() {
     // Example: Send an authentication message
-    //const char *auth_msg = "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"username\", \"password\"]}\n";
+    // const char *auth_msg = "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"username\", \"password\"]}\n";
     char auth_msg[1024];
     sprintf(auth_msg, "{\"id\": %d, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}\n", message_id, CONFIG_POOL_USER, CONFIG_POOL_PW);
     return pool_send(auth_msg);
@@ -200,7 +200,7 @@ int authenticate_with_pool() {
 
 int suggest_difficulty() {
     // Example: Send a difficulty suggestion message
-    //const char *suggest_difficulty_msg = "{\"id\": 3, \"method\": \"mining.suggest_difficulty\", \"params\": [1]}\n";
+    // const char *suggest_difficulty_msg = "{\"id\": 3, \"method\": \"mining.suggest_difficulty\", \"params\": [1]}\n";
     char suggest_difficulty_msg[1024];
     sprintf(suggest_difficulty_msg, "{\"id\": %d, \"method\": \"mining.suggest_difficulty\", \"params\": [1000]}\n", message_id);
     return pool_send(suggest_difficulty_msg);
@@ -216,8 +216,8 @@ void pool_task() {
                 ESP_LOGI(TAG, "Connected to pool");
 
                 // Example: Send a subscription message
-                //const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
-                //pool_send(subscribe_msg);
+                // const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
+                // pool_send(subscribe_msg);
             } else {
                 ESP_LOGE(TAG, "Failed to connect to pool. Retrying...");
                 vTaskDelay(pdMS_TO_TICKS(5000)); // Retry after 5 seconds
@@ -235,17 +235,25 @@ void pool_task() {
     }
 }
 
-
-const char* getaddrinfo_error(int err) {
+const char *getaddrinfo_error(int err) {
     switch (err) {
-        case EAI_AGAIN: return "Temporary failure in name resolution";
-        case EAI_BADFLAGS: return "Invalid value for ai_flags";
-        case EAI_FAIL: return "Non-recoverable failure in name resolution";
-        case EAI_FAMILY: return "ai_family not supported";
-        case EAI_MEMORY: return "Memory allocation failure";
-        case EAI_NONAME: return "Name or service not known";
-        case EAI_SERVICE: return "Service not supported for socket type";
-        case EAI_SOCKTYPE: return "ai_socktype not supported";
-        default: return "Unknown error";
+    case EAI_AGAIN:
+        return "Temporary failure in name resolution";
+    case EAI_BADFLAGS:
+        return "Invalid value for ai_flags";
+    case EAI_FAIL:
+        return "Non-recoverable failure in name resolution";
+    case EAI_FAMILY:
+        return "ai_family not supported";
+    case EAI_MEMORY:
+        return "Memory allocation failure";
+    case EAI_NONAME:
+        return "Name or service not known";
+    case EAI_SERVICE:
+        return "Service not supported for socket type";
+    case EAI_SOCKTYPE:
+        return "ai_socktype not supported";
+    default:
+        return "Unknown error";
     }
 }

@@ -8,6 +8,7 @@ INCLUDE_DIRS
     "../utils/include"
     "../asic/include"
     "../../main/"
+    "../pool/include"
 
 REQUIRES
     "json"
