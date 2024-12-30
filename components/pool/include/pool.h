@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// TODO: Add the rest of the message IDs so we can use them both in pool & stratum_message
+#define MINING_SUBSCRIBE_MSG_ID 2
+
 /**
  * Data structure to store parameters from stratum request/response
  * messages from the pool that inform job creation which generally

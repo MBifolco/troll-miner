@@ -8,7 +8,7 @@ static const char *messages[] = {
     "{\"result\":{\"version-rolling\":true,\"version-rolling.mask\":\"1fffe000\"},\"id\":1,\"error\":null}",
 
     // Response to mining.subscribe - the id of 2 tells us this - its the id we sent with our request
-    "{\"result\":[[\"mining.notify\",\"677a0966\"],\"19865d67\",8],\"id\":2,\"error\":null}",
+    "{\"result\":[[\"mining.notify\",\"677a0966\"],\"19865d67\",2],\"id\":2,\"error\":null}",
 
     // Request set difficulty
     "{\"id\": null, \"method\": \"mining.set_difficulty\", \"params\": [1024]}",

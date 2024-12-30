@@ -189,8 +189,6 @@ void parse_server_request(cJSON *json) {
     }
 }
 
-void process_mining_subscribe_response(cJSON *json) { ESP_LOGI(TAG, "mining.subscribe response"); }
-
 void parse_server_response(cJSON *json) {
     uint8_t msg_id = cJSON_GetObjectItem(json, "id")->valueint;
     if (!msg_id) {
@@ -199,7 +197,7 @@ void parse_server_response(cJSON *json) {
     }
 
     switch (msg_id) {
-    case 2:
+    case MINING_SUBSCRIBE_MSG_ID:
         process_mining_subscribe_response(json);
         break;
 

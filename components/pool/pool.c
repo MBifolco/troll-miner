@@ -186,7 +186,7 @@ int subscribe_to_pool() {
     // Example: Send a subscription message
     // const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
     char subscribe_msg[1024];
-    sprintf(subscribe_msg, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\"trollminer\"]}\n", message_id);
+    sprintf(subscribe_msg, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\"trollminer\"]}\n", MINING_SUBSCRIBE_MSG_ID);
     return pool_send(subscribe_msg);
 }
 

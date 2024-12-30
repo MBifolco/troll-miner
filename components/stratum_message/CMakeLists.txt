@@ -1,6 +1,7 @@
 idf_component_register(
 SRCS
     "stratum_message.c"
+    "responses/mining_subscribe.c"
 
 INCLUDE_DIRS 
     "include"

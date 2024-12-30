@@ -9,7 +9,7 @@
 #define COINBASE_SIZE 100
 #define COINBASE2_SIZE 128
 
-// docs on reqeusts and responses, methods and results
+// docs on requests and responses, methods and results
 // https://reference.cash/mining/stratum-protocol
 typedef enum { MINING_NOTIFY, MINING_SET_DIFFICULTY, MINING_SET_VERSION_MASK, NUM_METHODS } stratum_server_request_method;
 
