@@ -1,4 +1,8 @@
 [wokwi]
 version = 1
-firmware = 'build/flasher_args.json'
-elf = 'build/troll-miner.elf'
+# Run troll-miner
+#firmware = 'build/flasher_args.json'
+#elf = 'build/troll-miner.elf'
+# Run unit tests
+firmware = 'test/build/flasher_args.json'
+elf = 'test/build/unit_test_test.elf'

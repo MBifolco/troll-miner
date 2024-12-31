@@ -6,42 +6,10 @@
 
 #define MAX_MERKLE_BRANCHES 32
 #define HASH_SIZE 32
-#define COINBASE_SIZE 100
-#define COINBASE2_SIZE 128
 
 // docs on requests and responses, methods and results
 // https://reference.cash/mining/stratum-protocol
 typedef enum { MINING_NOTIFY, MINING_SET_DIFFICULTY, MINING_SET_VERSION_MASK, NUM_METHODS } stratum_server_request_method;
-
-// error code mapping
-// https://reference.cash/mining/stratum-protocol#error-codes
-typedef enum {
-    OTHER_UNKNOWN = 20,
-    JOB_NOT_FOUND = 21,
-    DUPLICATE_SHARE = 22,
-    LOW_DIFFICULTY_SHARE = 23,
-    UNAUTHRIZED_WORKER = 24,
-    NOT_SUBSCRIBED = 25,
-    NUM_ERRORS
-} stratum_server_response_to_client_request_error_code;
-
-typedef struct {
-    char *id;
-    char *method;
-    cJSON *params;
-} stratum_server_request_message;
-
-typedef struct {
-    char *id;
-    char *result; // can by anything I guess
-    cJSON *error;
-} stratum_server_response_message;
-
-typedef struct {
-    char *error_code; // number or string
-    char *message;
-    char *data; // optional and specified as 'object'
-} parsed_stratum_server_response_message_error;
 
 typedef struct {
     char *job_id;                // The job ID for the job being sent in this message.
