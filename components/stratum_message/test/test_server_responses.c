@@ -36,6 +36,8 @@ static void test_setup(void) {
     POOL_SESSION.extranonce2_len = 8;
 }
 
+static void test_teardown() { cJSON_Delete(TEST_JSON); }
+
 TEST_CASE("subscribe response handler sets POOL_SESSION vars", "[subscribe_response_handler]") {
     test_setup();
 
@@ -45,6 +47,8 @@ TEST_CASE("subscribe response handler sets POOL_SESSION vars", "[subscribe_respo
     for (int i = 0; i < POOL_SESSION.extranonce2_len; ++i) {
         TEST_ASSERT_EQUAL(0, POOL_SESSION.extranonce2[i]);
     }
+
+    test_teardown();
 }
 
 TEST_CASE("no changes to POOL_SESSION if result key missing from payload", "[subscribe_response_handler]") {
@@ -55,4 +59,36 @@ TEST_CASE("no changes to POOL_SESSION if result key missing from payload", "[sub
     TEST_ASSERT_EQUAL_STRING("", POOL_SESSION.extranonce1);
     TEST_ASSERT_EQUAL(8, POOL_SESSION.extranonce2_len);
     TEST_ASSERT_NULL(POOL_SESSION.extranonce2);
+
+    test_teardown();
+}
+
+TEST_CASE("mining.subscribe response with missing values from `result` does not modify POOL_SESSION", "[subscribe_response_handler]") {
+    test_setup();
+
+    cJSON *result_arr = cJSON_GetObjectItem(TEST_JSON, "result");
+    cJSON_DeleteItemFromArray(result_arr, 2);
+
+    STRATUM.server_response_handler.subscribe(TEST_JSON);
+    TEST_ASSERT_EQUAL_STRING("", POOL_SESSION.extranonce1);
+    TEST_ASSERT_EQUAL(8, POOL_SESSION.extranonce2_len);
+    TEST_ASSERT_NULL(POOL_SESSION.extranonce2);
+
+    test_teardown();
+}
+
+TEST_CASE("mining.subscribe response with an error does not end up modifying POOL_SESSION", "[subscribe_response_handler]") {
+    test_setup();
+
+    cJSON_DeleteItemFromObject(TEST_JSON, "error");
+    cJSON *err_arr = cJSON_AddArrayToObject(TEST_JSON, "error");
+    cJSON *err_msg = cJSON_CreateString("oops!");
+    cJSON_AddItemToArray(err_arr, err_msg);
+
+    STRATUM.server_response_handler.subscribe(TEST_JSON);
+    TEST_ASSERT_EQUAL_STRING("", POOL_SESSION.extranonce1);
+    TEST_ASSERT_EQUAL(8, POOL_SESSION.extranonce2_len);
+    TEST_ASSERT_NULL(POOL_SESSION.extranonce2);
+
+    test_teardown();
 }

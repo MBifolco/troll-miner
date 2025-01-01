@@ -2,29 +2,43 @@
 #include "esp_log.h"
 #include "pool.h"
 #include "stratum.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 static const char *TAG = "STRATUM_SERVER_RESPONSE";
 
 void subscribe_response_handler(cJSON *json) {
-    ESP_LOGI(TAG, "mining.subscribe response");
+    ESP_LOGD(TAG, "mining.subscribe response handler: %s", cJSON_Print(json));
+
+    cJSON *error = cJSON_GetObjectItem(json, "error");
+    if (error != NULL && !cJSON_IsNull(error)) {
+        ESP_LOGE(TAG, "mining.subscribe returned an error: %s", cJSON_Print(error));
+        return;
+    }
 
     cJSON *result = cJSON_GetObjectItem(json, "result");
     if (result == NULL) {
         return;
     }
+    if (cJSON_GetArraySize(result) < 3) {
+        ESP_LOGE(TAG, "mining.subscribe response `result` key is missing values");
+        return;
+    }
 
-    POOL_SESSION.extranonce1 = cJSON_GetArrayItem(result, 1)->valuestring;
-    POOL_SESSION.extranonce2_len = cJSON_GetArrayItem(result, 2)->valueint;
-    POOL_SESSION.extranonce2 = malloc(POOL_SESSION.extranonce2_len);
+    char *extranonce1 = cJSON_GetArrayItem(result, 1)->valuestring;
+    int extranonce2_len = cJSON_GetArrayItem(result, 2)->valueint;
+    POOL_SESSION.extranonce2 = malloc(extranonce2_len);
     if (POOL_SESSION.extranonce2 == NULL) {
         ESP_LOGE(TAG, "Unable to allocate memory for extranonce2");
         return;
     }
 
+    // Clear to modify POOL_SESSION
     // Be explicit and initialize everything to zero
     memset(POOL_SESSION.extranonce2, 0, POOL_SESSION.extranonce2_len);
+    POOL_SESSION.extranonce1 = extranonce1;
+    POOL_SESSION.extranonce2_len = extranonce2_len;
 
     ESP_LOGD(TAG, "POOL_SESSION.extranonce1: %s", POOL_SESSION.extranonce1);
     ESP_LOGD(TAG, "POOL_SESSION.extranonce2_len: %d", POOL_SESSION.extranonce2_len);
