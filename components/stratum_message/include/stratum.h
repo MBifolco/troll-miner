@@ -8,6 +8,7 @@
 // Predefined message IDs
 #define STRATUM_CONFIGURE_MESSAGE_ID 1
 #define STRATUM_SUBSCRIBE_MESSAGE_ID 2
+#define STRATUM_AUTHORIZE_MESSAGE_ID 3
 
 void stratum_init();
 

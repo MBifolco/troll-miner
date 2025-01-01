@@ -18,7 +18,13 @@ char *build_subscribe_request() {
     return subscribe_req;
 }
 
-char *build_authorize_request() { return NULL; }
+char *build_authorize_request() {
+    char *auth_req = malloc(REQUEST_BUFFER_SIZE);
+    sprintf(auth_req, "{\"id\": %d, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}\n", STRATUM_AUTHORIZE_MESSAGE_ID,
+            CONFIG_POOL_USER, CONFIG_POOL_PW);
+    return auth_req;
+}
+
 char *build_suggest_difficulty_request() { return NULL; }
 
 /**

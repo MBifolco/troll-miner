@@ -18,7 +18,8 @@
     "task.h": "c",
     "queue.h": "c",
     "esp_log.h": "c",
-    "unity.h": "c"
+    "unity.h": "c",
+    "unity_test_runner.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
