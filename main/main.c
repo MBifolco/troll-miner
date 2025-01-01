@@ -42,6 +42,9 @@ void app_main() {
      * Set intelligent defaults for the POOL_SESSION
      */
     POOL_SESSION.difficulty = 256;
+    POOL_SESSION.extranonce1 = "";
+    POOL_SESSION.extranonce2 = NULL;
+    POOL_SESSION.extranonce2_len = 8;
 
     // Create the queues
     stratum_to_job_queue = xQueueCreate(10, sizeof(mining_notify *));

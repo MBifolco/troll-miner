@@ -8,9 +8,9 @@ void stratum_init() {
     STRATUM.client_request.build_subscribe_request = build_subscribe_request;
     STRATUM.client_request.build_suggest_difficulty_request = build_suggest_difficulty_request;
 
-    // TODO
-    // STRATUM.server_response_handler.subscribe = subscribe_response_handler;
+    STRATUM.server_response_handler.subscribe = subscribe_response_handler;
 
+    // TODO
     // STRATUM.server_request_handler.notify = notify_request_handler;
     // STRATUM.server_request_handler.set_difficulty = set_difficulty_request_handler;
 }
