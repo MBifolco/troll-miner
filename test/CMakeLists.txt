@@ -5,14 +5,16 @@ cmake_minimum_required(VERSION 3.16)
 #
 set(EXTRA_COMPONENT_DIRS "../components")
 
-# Set the components to include the tests for.
-# This can be overridden from CMake cache:
-# - when invoking CMake directly: cmake -D TEST_COMPONENTS="xxxxx" ..
-# - when using idf.py: idf.py -T xxxxx build
-#
 set(TEST_COMPONENTS "stratum_message" CACHE STRING "List of components to test")
+#list(APPEND TEST_COMPONENTS "other_component")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
 # "Trim" the build. Include the minimal set of components, main, and anything it depends on.
 idf_build_set_property(MINIMAL_BUILD ON)
 project(unit_test_test)
+
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/coverage_report" _coverage_path)
+
+idf_create_coverage_report(${_coverage_path})
+idf_clean_coverage_report(${_coverage_path})

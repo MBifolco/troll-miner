@@ -1,6 +1,6 @@
 {
   "C_Cpp.intelliSenseEngine": "default",
-  "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 160, IndentWidth: 4 }",
+  "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 140, IndentWidth: 4 }",
   "idf.adapterTargetName": "esp32s3",
   "files.associations": {
     "cstdint": "cpp",
@@ -24,5 +24,5 @@
     "board/esp32s3-builtin.cfg"
   ],
   "idf.port": "/dev/ttyACM0",
-  "idf.flashType": "UART"
+  "idf.flashType": "JTAG"
 }
