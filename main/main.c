@@ -15,6 +15,7 @@
 #include "queue_handles.h"
 #include "sdkconfig.h"
 #include "serial.h"
+#include "stratum.h"
 #include "stratum_message.h"
 #include "wifi_connection.h"
 
@@ -45,6 +46,9 @@ void app_main() {
     POOL_SESSION.extranonce1 = "";
     POOL_SESSION.extranonce2 = NULL;
     POOL_SESSION.extranonce2_len = 8;
+
+    // Assign function pointers for stratum object
+    stratum_init();
 
     // Create the queues
     stratum_to_job_queue = xQueueCreate(10, sizeof(mining_notify *));
