@@ -5,6 +5,7 @@
 #include "freertos/queue.h"
 #include "pool.h"
 #include "queue_handles.h"
+#include "stratum.h"
 #include "utils.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -198,7 +199,7 @@ void parse_server_response(cJSON *json) {
 
     switch (msg_id) {
     case MINING_SUBSCRIBE_MSG_ID:
-        process_mining_subscribe_response(json);
+        STRATUM.server_response_handler.subscribe(json);
         break;
 
     default:
