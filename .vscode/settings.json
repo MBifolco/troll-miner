@@ -16,7 +16,8 @@
     "job.h": "c",
     "ratio": "c",
     "task.h": "c",
-    "queue.h": "c"
+    "queue.h": "c",
+    "esp_log.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"

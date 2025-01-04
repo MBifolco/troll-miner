@@ -1,9 +1,10 @@
 #include "stratum_message.h"
 #include "esp_log.h"
+#include "fayksic.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "pool.h"
 #include "queue_handles.h"
-#include "fayksic.h"
 #include "utils.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -72,7 +73,7 @@ void process_mining_notify(cJSON *json) {
         goto end_from_prefix;
     }
 
-    ESP_LOGI(TAG, "Job ID after allocations: %s (Address: %p)", mining_notify->job_id, (void *)mining_notify->job_id);
+    ESP_LOGD(TAG, "Job ID after allocations: %s (Address: %p)", mining_notify->job_id, (void *)mining_notify->job_id);
 
     // Set merkle branches
     cJSON *merkle_branch = cJSON_GetArrayItem(params, 4);
@@ -88,13 +89,13 @@ void process_mining_notify(cJSON *json) {
         ESP_LOGE(TAG, "Failed to allocate memory for merkle branches");
         goto end_from_suffix;
     }
-    // // set block version
+    // set block version
     mining_notify->version = strtoul(cJSON_GetArrayItem(params, 5)->valuestring, NULL, 16);
 
-    // // set network difficulty
+    // set network difficulty
     mining_notify->nbits = strtoul(cJSON_GetArrayItem(params, 6)->valuestring, NULL, 16);
 
-    // // set ntime
+    // set ntime
     mining_notify->time = strtoul(cJSON_GetArrayItem(params, 7)->valuestring, NULL, 16);
 
     for (size_t i = 0; i < n_merkle_branches; i++) {
@@ -142,32 +143,17 @@ void check_queue_items() {
 }
 
 void process_mining_set_difficulty(cJSON *json) {
-    ESP_LOGI(TAG, "build set difficulty object to send to job queue");
-    cJSON * params = cJSON_GetObjectItem(json, "params");
-    mining_set_difficulty * mining_set_difficulty = malloc(sizeof(mining_set_difficulty));
-    mining_set_difficulty->difficulty = cJSON_GetArrayItem(params, 0)->valueint;
-    
-    send_job_difficulty(mining_set_difficulty->difficulty);
+    cJSON *params = cJSON_GetObjectItem(json, "params");
+    POOL_SESSION.difficulty = cJSON_GetArrayItem(params, 0)->valueint;
+
+    /**
+     * TODO: This should be "configurable", i.e. today we only send to fayksic; tomorrow - other ASICs
+     * TODO: This assumes that we'll have access to the ASIC on this particular ESP32
+     */
+    send_job_difficulty(POOL_SESSION.difficulty);
 }
 
-void process_mining_set_version_mask(cJSON *json) {
-    ESP_LOGI(TAG, "build set version mask object to send to job queue");
-    // cJSON * params = cJSON_GetObjectItem(json, "params");
-    // mining_set_version_mask * mining_set_version_mask = malloc(sizeof(mining_set_version_mask));
-    // mining_set_version_mask->version_mask = strtoul(cJSON_GetArrayItem(params, 0)->valuestring, NULL, 16);
-    //  call whatever function will be handling set version mask on asic
-}
-
-int parase_server_message_id(cJSON *json) {
-    cJSON *id_json = cJSON_GetObjectItem(json, "id");
-    int64_t parsed_id = -1;
-    if (id_json != NULL && cJSON_IsNumber(id_json)) {
-        parsed_id = id_json->valueint;
-    } else {
-        ESP_LOGE(TAG, "Unable to parse id");
-    }
-    return parsed_id;
-}
+void process_mining_set_version_mask(cJSON *json) { ESP_LOGI(TAG, "build set version mask object to send to job queue"); }
 
 void parse_server_request(cJSON *json) {
     ESP_LOGI(TAG, "parse server request");
@@ -203,7 +189,23 @@ void parse_server_request(cJSON *json) {
     }
 }
 
-void parse_server_response(cJSON *json) { ESP_LOGI(TAG, "parse server response"); }
+void parse_server_response(cJSON *json) {
+    uint8_t msg_id = cJSON_GetObjectItem(json, "id")->valueint;
+    if (!msg_id) {
+        ESP_LOGE(TAG, "Stratum server response missing ID: %s", cJSON_Print(json));
+        return;
+    }
+
+    switch (msg_id) {
+    case MINING_SUBSCRIBE_MSG_ID:
+        process_mining_subscribe_response(json);
+        break;
+
+    default:
+        ESP_LOGE(TAG, "Unknown stratum server response for given message ID: %d", msg_id);
+        break;
+    }
+}
 
 void parse_message(const char *message_json) {
     // is valid json
