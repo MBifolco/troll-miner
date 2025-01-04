@@ -17,6 +17,8 @@
     "ratio": "c",
     "task.h": "c",
     "queue.h": "c",
+    "asic.h": "c",
+    "diff_utils.h": "c"
     "esp_log.h": "c"
   },
   "idf.openOcdConfigs": [

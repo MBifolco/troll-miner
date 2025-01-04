@@ -1,13 +1,13 @@
 #include "fayksic.h"
 #include "asic.h"
 #include "crc.h"
-#include "job.h"
-#include "serial.h"
-#include "utils.h"
-
+#include "diff_utils.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "job.h"
+#include "serial.h"
+#include "utils.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -97,44 +97,6 @@ void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
 }
 
-void split_uint32_to_bytes(uint32_t value, uint8_t *bytes, uint8_t idx) {
-    bytes[idx + 0] = (value >> 24) & 0xFF; // Extract the most significant byte
-    bytes[idx + 1] = (value >> 16) & 0xFF; // Extract the second most significant byte
-    bytes[idx + 2] = (value >> 8) & 0xFF;  // Extract the second least significant byte
-    bytes[idx + 3] = value & 0xFF;         // Extract the least significant byte
-}
-
-uint32_t closest_power_of_2_minus_1(uint32_t high, uint32_t low) {
-    // If the number is 0, the mask will also be 0
-    if (high == 0 && low == 0) {
-        return 0;
-    }
-
-    // Find the closest power of 2 less than or equal to the number
-    unsigned long long power_of_2 = 1;
-
-    // Handle the high 32 bits
-    if (high != 0) {
-        while (high > 0) {
-            power_of_2 <<= 1;
-            high >>= 1;
-        }
-        power_of_2 >>= 1; // Shift back once because we overshot the power of 2
-    }
-
-    // Handle the low 32 bits
-    if (low != 0) {
-        while (low > 0) {
-            power_of_2 <<= 1;
-            low >>= 1;
-        }
-        power_of_2 >>= 1; // Shift back once because we overshot the power of 2
-    }
-
-    // Subtract 1 from the closest power of 2 to create the mask
-    return power_of_2 - 1;
-}
-
 // TODO: Find & update send_job_diff refs
 void send_job_difficulty(uint32_t difficulty) {
     /**
@@ -160,16 +122,18 @@ void send_job_difficulty(uint32_t difficulty) {
     }
 
     // 2 for command, 8 for target mask
+    uint32_t target_mask[2];
+    generate_target_mask(result, target_mask);
+    ESP_LOGI(TAG, "Provided difficulty: %lu", difficulty);
+    ESP_LOGI(TAG, "Result: 0x%08lx%08lx", result[0], result[1]);
+    ESP_LOGI(TAG, "Mask:   0x%08lx%08lx", target_mask[1], target_mask[0]);
+
+    // TODO: Reverse the bits?
     uint8_t job_difficulty_mask[10];
     job_difficulty_mask[0] = 0x00;
     job_difficulty_mask[1] = TICKET_MASK;
-    uint32_t power_of_2 = closest_power_of_2_minus_1(result[1], result[0]);
-
-    // TODO: Reverse the bits - however, what in what endianness should they be reversed?
-    for (int i = 9; i >= 2; i--) {
-        job_difficulty_mask[i] = (uint8_t)(power_of_2 & 0xFF);
-        power_of_2 >>= 8;
-    }
+    split_uint32_to_bytes(target_mask[1], job_difficulty_mask, 2);
+    split_uint32_to_bytes(target_mask[0], job_difficulty_mask, 6);
 
     ESP_LOGI(TAG, "ASIC difficulty mask payload: ");
     for (int i = 0; i < 10; i++) {
