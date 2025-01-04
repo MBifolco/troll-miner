@@ -10,7 +10,7 @@ INCLUDE_DIRS
     "include"
     "../job/include"
     "../../main/"
-    "../stratum_message/include"
+    "../stratum/include"
     "../utils/include"
 
 REQUIRES 
