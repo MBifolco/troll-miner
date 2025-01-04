@@ -60,5 +60,8 @@ void app_main() {
     xTaskCreate((TaskFunction_t)job_task, "job_task", 4096, NULL, 5, NULL);
 
     // Start the asic task to listen to work and send to asic
-    xTaskCreate((TaskFunction_t)asic_task, "asic_task", 4096, NULL, 5, NULL);
+    xTaskCreate((TaskFunction_t)asic_request_task, "asic_request_task", 4096, NULL, 5, NULL);
+
+    // Start the asic result listener task to listen to listen for asic results...
+    xTaskCreate((TaskFunction_t)asic_result_listener_task, "asic_result_listener_task", 4096, NULL, 5, NULL);
 }
