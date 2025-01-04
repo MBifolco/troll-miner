@@ -58,12 +58,12 @@ struct session {
     uint8_t *extranonce2;   // Global value because we don't need to reset it when notified of a new job
 };
 
-struct Stratum {
+struct stratum {
     struct client_request client_request;
     struct server_response_handler server_response_handler;
     struct server_request_handler server_request_handler;
     struct session session;
 };
-extern struct Stratum STRATUM;
+extern struct stratum STRATUM;
 
 #endif // STRATUM_COMPONENT_H

@@ -4,7 +4,7 @@ SRCS
     "test_server_requests.c"
     "test_server_responses.c"
 
-    # External deps that linker will need at compile time
+    # External deps that linker will need at compile time (because we're not mocking)
     "../../asic/fayksic.c"
 
 INCLUDE_DIRS 

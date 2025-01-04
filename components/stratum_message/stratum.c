@@ -1,6 +1,6 @@
 #include "stratum.h"
 
-struct Stratum STRATUM;
+struct stratum STRATUM;
 
 void stratum_init() {
     /**
