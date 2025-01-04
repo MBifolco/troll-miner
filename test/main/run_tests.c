@@ -1,16 +1,20 @@
-/* Example test application for testable component.
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
+#include "../../main/queue_handles.h"
+#include "freertos/queue.h"
 #include "unity.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
+/**
+ * These are defined in troll-miner's main.c, which we don't really have
+ * access to or want to...so we have to make these globals available for unit
+ * tests ourselves
+ *
+ * TODO: These should probably be imported somewhere in troll miner so we can
+ * follow suit here, instead of having to redefine all globals
+ */
+QueueHandle_t stratum_to_job_queue;
+QueueHandle_t work_to_asic_queue;
 
 static void print_banner(const char *text);
 
