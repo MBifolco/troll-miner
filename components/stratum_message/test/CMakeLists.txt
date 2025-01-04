@@ -1,11 +1,21 @@
 idf_component_register(
-    SRC_DIRS "."
+SRCS
+    "test_client_requests.c"
+    "test_server_requests.c"
+    "test_server_responses.c"
 
-    INCLUDE_DIRS 
-        "../include"
-        "../../pool/include"
+    # External deps that linker will need at compile time
+    "../../asic/fayksic.c"
 
-    REQUIRES
-        "unity"
-        "json"
-        )
+INCLUDE_DIRS 
+    "../include"
+    "../../asic/include"
+    "../../job/include"
+    "../../pool/include"
+    "../../utils/include"
+
+REQUIRES
+    "unity"
+    "json"
+    "driver"
+)

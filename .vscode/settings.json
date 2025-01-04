@@ -20,7 +20,8 @@
     "esp_log.h": "c",
     "unity.h": "c",
     "unity_test_runner.h": "c",
-    "cjson.h": "c"
+    "cjson.h": "c",
+    "fayksic.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"

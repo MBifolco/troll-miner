@@ -1,11 +1,8 @@
 #include "cJSON.h"
-#include "esp_log.h"
 #include "pool.h"
 #include "stratum.h"
 #include "unity.h"
 #include "unity_test_runner.h"
-
-struct pool_session POOL_SESSION;
 
 static cJSON *TEST_JSON;
 
@@ -13,7 +10,11 @@ static void test_setup(void) {
     // Initialize stratum function pointers
     stratum_init();
 
-    // Build the JSON response object
+    /**
+     * Build the server's response JSON object
+     *
+     * {"result":[["mining.notify","677a0966"],"19865d67",2],"id":2,"error":null}",
+     */
     TEST_JSON = cJSON_CreateObject();
     cJSON_AddNumberToObject(TEST_JSON, "id", 2);
     cJSON_AddNullToObject(TEST_JSON, "error");

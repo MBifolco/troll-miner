@@ -21,7 +21,6 @@
 
 QueueHandle_t stratum_to_job_queue;
 QueueHandle_t work_to_asic_queue;
-struct pool_session POOL_SESSION;
 
 void app_main() {
 #ifdef CONFIG_MOCK_POOL

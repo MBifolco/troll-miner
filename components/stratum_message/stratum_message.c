@@ -143,18 +143,8 @@ void check_queue_items() {
     ESP_LOGI(TAG, "Number of items in the queue: %u", (unsigned int)items_in_queue);
 }
 
-void process_mining_set_difficulty(cJSON *json) {
-    cJSON *params = cJSON_GetObjectItem(json, "params");
-    POOL_SESSION.difficulty = cJSON_GetArrayItem(params, 0)->valueint;
-
-    /**
-     * TODO: This should be "configurable", i.e. today we only send to fayksic; tomorrow - other ASICs
-     * TODO: This assumes that we'll have access to the ASIC on this particular ESP32
-     */
-    send_job_difficulty(POOL_SESSION.difficulty);
-}
-
 void process_mining_set_version_mask(cJSON *json) { ESP_LOGI(TAG, "build set version mask object to send to job queue"); }
+void process_mining_set_difficulty() {}
 
 void parse_server_request(cJSON *json) {
     ESP_LOGI(TAG, "parse server request");
@@ -169,8 +159,9 @@ void parse_server_request(cJSON *json) {
             method = MINING_NOTIFY;
             ESP_LOGI(TAG, "mining.notify");
         } else if (strcmp(method_str, "mining.set_difficulty") == 0) {
-            method = MINING_SET_DIFFICULTY;
             ESP_LOGI(TAG, "mining.set_difficulty");
+            STRATUM.server_request_handler.set_difficulty(json);
+            return;
         } else if (strcmp(method_str, "mining.set_version_mask") == 0) {
             method = MINING_SET_VERSION_MASK;
             ESP_LOGI(TAG, "mining.set_version_mask");
@@ -179,7 +170,7 @@ void parse_server_request(cJSON *json) {
             // should this return error?
         }
     } else {
-        ESP_LOGI(TAG, "method is not a string");
+        ESP_LOGE(TAG, "method is not a string: %s", cJSON_Print(json));
         // should this return error?
     }
 
