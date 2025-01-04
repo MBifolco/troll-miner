@@ -28,21 +28,21 @@ void subscribe_response_handler(cJSON *json) {
 
     char *extranonce1 = cJSON_GetArrayItem(result, 1)->valuestring;
     int extranonce2_len = cJSON_GetArrayItem(result, 2)->valueint;
-    POOL_SESSION.extranonce2 = malloc(extranonce2_len);
-    if (POOL_SESSION.extranonce2 == NULL) {
+    STRATUM.session.extranonce2 = malloc(extranonce2_len);
+    if (STRATUM.session.extranonce2 == NULL) {
         ESP_LOGE(TAG, "Unable to allocate memory for extranonce2");
         return;
     }
 
     // Clear to modify POOL_SESSION
     // Be explicit and initialize everything to zero
-    memset(POOL_SESSION.extranonce2, 0, POOL_SESSION.extranonce2_len);
-    POOL_SESSION.extranonce1 = extranonce1;
-    POOL_SESSION.extranonce2_len = extranonce2_len;
+    memset(STRATUM.session.extranonce2, 0, STRATUM.session.extranonce2_len);
+    STRATUM.session.extranonce1 = extranonce1;
+    STRATUM.session.extranonce2_len = extranonce2_len;
 
-    ESP_LOGD(TAG, "POOL_SESSION.extranonce1: %s", POOL_SESSION.extranonce1);
-    ESP_LOGD(TAG, "POOL_SESSION.extranonce2_len: %d", POOL_SESSION.extranonce2_len);
-    for (int i = 0; i < POOL_SESSION.extranonce2_len; i++) {
-        ESP_LOGD(TAG, "POOL_SESSION.extranonce2[%d]: 0x%02x", i, POOL_SESSION.extranonce2[i]);
+    ESP_LOGD(TAG, "STRATUM.session.extranonce1: %s", STRATUM.session.extranonce1);
+    ESP_LOGD(TAG, "STRATUM.session.extranonce2_len: %d", STRATUM.session.extranonce2_len);
+    for (int i = 0; i < STRATUM.session.extranonce2_len; i++) {
+        ESP_LOGD(TAG, "STRATUM.session.extranonce2[%d]: 0x%02x", i, STRATUM.session.extranonce2[i]);
     }
 }

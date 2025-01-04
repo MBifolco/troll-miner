@@ -38,14 +38,6 @@ void app_main() {
     // Initialize the pool component
     pool_init();
 
-    /**
-     * Set intelligent defaults for the POOL_SESSION
-     */
-    POOL_SESSION.difficulty = 256;
-    POOL_SESSION.extranonce1 = "";
-    POOL_SESSION.extranonce2 = NULL;
-    POOL_SESSION.extranonce2_len = 8;
-
     // Assign function pointers for stratum object
     stratum_init();
 

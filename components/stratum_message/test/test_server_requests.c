@@ -1,6 +1,5 @@
 #include "cJSON.h"
 #include "fayksic.h"
-#include "pool.h"
 #include "stratum.h"
 #include "unity.h"
 #include "unity_test_runner.h"
@@ -23,23 +22,20 @@ static void test_setup(void) {
     cJSON *params_arr = cJSON_AddArrayToObject(TEST_JSON, "params");
     cJSON *diff = cJSON_CreateNumber(1024);
     cJSON_AddItemToArray(params_arr, diff);
-
-    // Reset the POOL_SESSION members
-    POOL_SESSION.difficulty = 256;
 }
 
 static void test_teardown() { cJSON_Delete(TEST_JSON); }
 
-TEST_CASE("mining.set_difficulty stratum server request stores diff on POOL_SESSION", "[set_difficulty_request_handler]") {
+TEST_CASE("mining.set_difficulty stratum server request stores diff on STRATUM.session", "[set_difficulty_request_handler]") {
     test_setup();
 
     STRATUM.server_request_handler.set_difficulty(TEST_JSON);
-    TEST_ASSERT_EQUAL(1024, POOL_SESSION.difficulty);
+    TEST_ASSERT_EQUAL(1024, STRATUM.session.difficulty);
 
     test_teardown();
 }
 
-TEST_CASE("mining.set_difficulty with bad `params` does not modify POOL_SESSION", "[set_difficulty_request_handler]") {
+TEST_CASE("mining.set_difficulty with bad `params` does not modify STRATUM.session", "[set_difficulty_request_handler]") {
     test_setup();
 
     // Empty params array
@@ -47,12 +43,12 @@ TEST_CASE("mining.set_difficulty with bad `params` does not modify POOL_SESSION"
     cJSON_DeleteItemFromArray(params_arr, 0);
 
     STRATUM.server_request_handler.set_difficulty(TEST_JSON);
-    TEST_ASSERT_EQUAL(256, POOL_SESSION.difficulty);
+    TEST_ASSERT_EQUAL(256, STRATUM.session.difficulty);
 
     // params key is missing
     cJSON_DeleteItemFromObject(TEST_JSON, "params");
     STRATUM.server_request_handler.set_difficulty(TEST_JSON);
-    TEST_ASSERT_EQUAL(256, POOL_SESSION.difficulty);
+    TEST_ASSERT_EQUAL(256, STRATUM.session.difficulty);
 
     test_teardown();
 }
