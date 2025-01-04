@@ -4,11 +4,11 @@
 
 // Example messages (replace these with your actual stratum messages)
 static const char *messages[] = {
-    // Response to minnig.configure - the id of 1 tells us this - its the id we sent with our request
+    // Response to mining.configure - the id of 1 tells us this - its the id we sent with our request
     "{\"result\":{\"version-rolling\":true,\"version-rolling.mask\":\"1fffe000\"},\"id\":1,\"error\":null}",
 
-    // Response to mining.subscribe - the id -f 2 tells us this - its the id we sent with our request
-    "{\"result\":[[\"mining.notify\",\"677a0966\"]],\"19865d67\",8],\"id\":2,\"error\":null}",
+    // Response to mining.subscribe - the id of 2 tells us this - its the id we sent with our request
+    "{\"result\":[[\"mining.notify\",\"677a0966\"],\"19865d67\",2],\"id\":2,\"error\":null}",
 
     // Request set difficulty
     "{\"id\": null, \"method\": \"mining.set_difficulty\", \"params\": [128]}",

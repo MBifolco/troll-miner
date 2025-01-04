@@ -9,7 +9,7 @@
 #define COINBASE_SIZE 100
 #define COINBASE2_SIZE 128
 
-// docs on reqeusts and responses, methods and results
+// docs on requests and responses, methods and results
 // https://reference.cash/mining/stratum-protocol
 typedef enum { MINING_NOTIFY, MINING_SET_DIFFICULTY, MINING_SET_VERSION_MASK, NUM_METHODS } stratum_server_request_method;
 
@@ -55,20 +55,13 @@ typedef struct {
     uint32_t time;               // The hex-encoded current time for the block.
 } mining_notify;
 
-typedef struct {
-    uint32_t difficulty; // The new difficulty threshold for share reporting. Shares are reported using the mining.submit message.
-} mining_set_difficulty;
-
-typedef struct {
-    uint32_t version_mask; // not sure what this is yet
-} mining_set_version_mask;
-
 void check_queue_items();
 void process_message(const char *message);
 void parse_message(const char *message_json);
 void process_mining_notify();
 void process_mining_set_difficulty();
 void process_mining_set_version_mask();
+void process_mining_subscribe_response(cJSON *json);
 void parse_request(cJSON *method_json);
 void parse_response(cJSON *result_json);
 

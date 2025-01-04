@@ -20,6 +20,7 @@
 
 QueueHandle_t stratum_to_job_queue;
 QueueHandle_t work_to_asic_queue;
+struct pool_session POOL_SESSION;
 
 void app_main() {
 #ifdef CONFIG_MOCK_POOL
@@ -36,6 +37,11 @@ void app_main() {
 #endif
     // Initialize the pool component
     pool_init();
+
+    /**
+     * Set intelligent defaults for the POOL_SESSION
+     */
+    POOL_SESSION.difficulty = 256;
 
     // Create the queues
     stratum_to_job_queue = xQueueCreate(10, sizeof(mining_notify *));

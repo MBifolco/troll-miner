@@ -19,6 +19,7 @@
     "queue.h": "c",
     "asic.h": "c",
     "diff_utils.h": "c"
+    "esp_log.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
