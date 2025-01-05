@@ -52,9 +52,9 @@ void app_main() {
     // Start the job task to listen to stratum messages
     xTaskCreate((TaskFunction_t)job_task, "job_task", 4096, NULL, 5, NULL);
 
-    // Start the asic task to listen to work and send to asic
+    // Start the ASIC task to listen to work and send to ASIC
     xTaskCreate((TaskFunction_t)asic_request_task, "asic_request_task", 4096, NULL, 5, NULL);
 
-    // Start the asic result listener task to listen to listen for asic results...
+    // Start the ASIC result task to listen for ASIC results...
     xTaskCreate((TaskFunction_t)asic_result_listener_task, "asic_result_listener_task", 4096, NULL, 5, NULL);
 }
