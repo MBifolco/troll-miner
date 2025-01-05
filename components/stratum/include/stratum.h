@@ -61,7 +61,7 @@ struct server_request_handler {
 struct session {
     char *extranonce1;      // Source: response of mining.subscribe
     uint32_t difficulty;    // Source: request of mining.set_difficulty
-    size_t extranonce2_len; // Source: response of mining.subscribe
+    size_t extranonce2_len; // Source: response of mining.subscribe - # of bytes extranonce2 should be
     uint8_t *extranonce2;   // Global value because we don't need to reset it when notified of a new job
 };
 
