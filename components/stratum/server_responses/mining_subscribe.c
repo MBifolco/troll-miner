@@ -35,10 +35,11 @@ void subscribe_response_handler(cJSON *json) {
     }
 
     // Clear to modify POOL_SESSION
-    // Be explicit and initialize everything to zero
-    memset(STRATUM.session.extranonce2, 0, STRATUM.session.extranonce2_len);
     STRATUM.session.extranonce1 = extranonce1;
     STRATUM.session.extranonce2_len = extranonce2_len;
+
+    // Be explicit and initialize everything to zero
+    memset(STRATUM.session.extranonce2, 0, STRATUM.session.extranonce2_len);
 
     ESP_LOGD(TAG, "STRATUM.session.extranonce1: %s", STRATUM.session.extranonce1);
     ESP_LOGD(TAG, "STRATUM.session.extranonce2_len: %d", STRATUM.session.extranonce2_len);
