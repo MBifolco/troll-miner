@@ -5,7 +5,7 @@
 #include "job.h"
 #include "mbedtls/sha256.h"
 #include "queue_handles.h"
-#include "stratum_message.h"
+#include "stratum.h"
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>

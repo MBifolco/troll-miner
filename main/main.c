@@ -1,11 +1,5 @@
 #include "asic.h"
 #include "esp_log.h"
-#include "job.h"
-#include "pool.h"
-#include "queue_handles.h"
-#include "stratum_message.h"
-#include "wifi_connection.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
@@ -16,7 +10,6 @@
 #include "sdkconfig.h"
 #include "serial.h"
 #include "stratum.h"
-#include "stratum_message.h"
 #include "wifi_connection.h"
 
 QueueHandle_t stratum_to_job_queue;
