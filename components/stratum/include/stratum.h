@@ -6,7 +6,14 @@
 
 #define REQUEST_BUFFER_SIZE 1024
 
-// Predefined message IDs
+/**
+ * Predefined message IDs
+ *
+ * Two reasons for using hardcoded set of message IDs for these particular messages
+ * 1) We don't know what it looks like when things restart w/ the pool but we're using different IDs
+ * 2) If we were to go fully dynamic, we'd need to keep track of that state which could becoming
+ *    annoying - so don't bother until we need to
+ */
 #define STRATUM_CONFIGURE_MESSAGE_ID 1
 #define STRATUM_SUBSCRIBE_MESSAGE_ID 2
 #define STRATUM_AUTHORIZE_MESSAGE_ID 3
