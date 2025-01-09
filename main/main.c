@@ -1,11 +1,5 @@
 #include "asic.h"
 #include "esp_log.h"
-#include "job.h"
-#include "pool.h"
-#include "queue_handles.h"
-#include "stratum_message.h"
-#include "wifi_connection.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
@@ -15,12 +9,11 @@
 #include "queue_handles.h"
 #include "sdkconfig.h"
 #include "serial.h"
-#include "stratum_message.h"
+#include "stratum.h"
 #include "wifi_connection.h"
 
 QueueHandle_t stratum_to_job_queue;
 QueueHandle_t work_to_asic_queue;
-struct pool_session POOL_SESSION;
 
 void app_main() {
 #ifdef CONFIG_MOCK_POOL
@@ -38,10 +31,8 @@ void app_main() {
     // Initialize the pool component
     pool_init();
 
-    /**
-     * Set intelligent defaults for the POOL_SESSION
-     */
-    POOL_SESSION.difficulty = 256;
+    // Assign function pointers for stratum object
+    stratum_init();
 
     // Create the queues
     stratum_to_job_queue = xQueueCreate(10, sizeof(mining_notify *));
@@ -61,9 +52,9 @@ void app_main() {
     // Start the job task to listen to stratum messages
     xTaskCreate((TaskFunction_t)job_task, "job_task", 4096, NULL, 5, NULL);
 
-    // Start the asic task to listen to work and send to asic
+    // Start the ASIC task to listen to work and send to ASIC
     xTaskCreate((TaskFunction_t)asic_request_task, "asic_request_task", 4096, NULL, 5, NULL);
 
-    // Start the asic result listener task to listen to listen for asic results...
+    // Start the ASIC result task to listen for ASIC results...
     xTaskCreate((TaskFunction_t)asic_result_listener_task, "asic_result_listener_task", 4096, NULL, 5, NULL);
 }

@@ -121,7 +121,6 @@ void send_job_difficulty(uint32_t difficulty) {
         current_32bits = current_32bits - (result[i] * difficulty);
     }
 
-    // 2 for command, 8 for target mask
     uint32_t target_mask[2];
     generate_target_mask(result, target_mask);
     ESP_LOGI(TAG, "Provided difficulty: %lu", difficulty);
@@ -129,6 +128,7 @@ void send_job_difficulty(uint32_t difficulty) {
     ESP_LOGI(TAG, "Mask:   0x%08lx%08lx", target_mask[1], target_mask[0]);
 
     // TODO: Reverse the bits?
+    // 2 for command, 8 for target mask
     uint8_t job_difficulty_mask[10];
     job_difficulty_mask[0] = 0x00;
     job_difficulty_mask[1] = TICKET_MASK;

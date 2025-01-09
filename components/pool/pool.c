@@ -5,6 +5,7 @@
 #include "freertos/task.h"
 #include "lwip/sockets.h"
 #include "sdkconfig.h"
+#include "stratum.h"
 #include "stratum_message.h"
 #include <arpa/inet.h>
 #include <lwip/netdb.h>
@@ -169,42 +170,33 @@ int pool_send(const char *message) {
 }
 
 int configure_version_rolling() {
-    // Example: Send a version rolling message
-    // const char *version_rolling_msg = "{\"id\": %d, \"method\": \"mining.configure\", \"params\": [{\"version-rolling.mask\": \"0x0000000f\",
-    // \"version-rolling.min-difficulty\": 1, \"version-rolling.max-difficulty\": 1, \"version-rolling.threshold\": 1}]}\n";
-    char version_rolling_msg[1024];
-    sprintf(version_rolling_msg,
-            "{\"id\": %d, "
-            "\"method\": \"mining.configure\", "
-            "\"params\": [[\"version-rolling\"], {\"version-rolling.mask\": \"ffffffff\"}]}\n",
-            message_id);
-
-    return pool_send(version_rolling_msg);
+    char *configure_req = STRATUM.client_request.build_configure_request();
+    int res = pool_send(configure_req);
+    free(configure_req);
+    return res;
 }
 
 int subscribe_to_pool() {
-    // Example: Send a subscription message
-    // const char *subscribe_msg = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}\n";
-    char subscribe_msg[1024];
-    sprintf(subscribe_msg, "{\"id\": %d, \"method\": \"mining.subscribe\", \"params\": [\"trollminer\"]}\n", MINING_SUBSCRIBE_MSG_ID);
-    return pool_send(subscribe_msg);
+    char *subscribe_req = STRATUM.client_request.build_subscribe_request();
+    int res = pool_send(subscribe_req);
+    free(subscribe_req);
+    return res;
 }
 
 int authenticate_with_pool() {
-    // Example: Send an authentication message
-    // const char *auth_msg = "{\"id\": 2, \"method\": \"mining.authorize\", \"params\": [\"username\", \"password\"]}\n";
-    char auth_msg[1024];
-    sprintf(auth_msg, "{\"id\": %d, \"method\": \"mining.authorize\", \"params\": [\"%s\", \"%s\"]}\n", message_id, CONFIG_POOL_USER, CONFIG_POOL_PW);
-    return pool_send(auth_msg);
+    char *auth_req = STRATUM.client_request.build_authorize_request();
+    int res = pool_send(auth_req);
+    free(auth_req);
+    return res;
 }
 
 int suggest_difficulty() {
-    // Example: Send a difficulty suggestion message
-    // const char *suggest_difficulty_msg = "{\"id\": 3, \"method\": \"mining.suggest_difficulty\", \"params\": [1]}\n";
-    char suggest_difficulty_msg[1024];
-    sprintf(suggest_difficulty_msg, "{\"id\": %d, \"method\": \"mining.suggest_difficulty\", \"params\": [1000]}\n", message_id);
-    return pool_send(suggest_difficulty_msg);
+    char *suggest_diff_req = STRATUM.client_request.build_suggest_difficulty_request();
+    int res = pool_send(suggest_diff_req);
+    free(suggest_diff_req);
+    return res;
 }
+
 // Persistent task for managing the pool connection
 void pool_task() {
     char *buffer = malloc(2048);

@@ -1,6 +1,6 @@
 {
   "C_Cpp.intelliSenseEngine": "default",
-  "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 160, IndentWidth: 4 }",
+  "C_Cpp.clang_format_fallbackStyle": "{ ColumnLimit: 140, IndentWidth: 4 }",
   "idf.adapterTargetName": "esp32s3",
   "files.associations": {
     "cstdint": "cpp",
@@ -17,9 +17,13 @@
     "ratio": "c",
     "task.h": "c",
     "queue.h": "c",
+    "esp_log.h": "c",
+    "unity.h": "c",
+    "unity_test_runner.h": "c",
+    "cjson.h": "c",
+    "fayksic.h": "c",
     "asic.h": "c",
     "diff_utils.h": "c"
-    "esp_log.h": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
