@@ -23,7 +23,8 @@
     "cjson.h": "c",
     "fayksic.h": "c",
     "asic.h": "c",
-    "diff_utils.h": "c"
+    "diff_utils.h": "c",
+    "array": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"

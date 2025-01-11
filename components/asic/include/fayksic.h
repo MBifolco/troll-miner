@@ -34,4 +34,6 @@ typedef enum {
 
 void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]);
 void send_job_difficulty(uint32_t difficulty);
+void parse_result(uint8_t *asic_res_buffer, int buffer_size);
+
 #endif /* FAYKSIC_H_ */

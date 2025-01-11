@@ -2,11 +2,11 @@
 Thanks you to the author of the original code:
 https://github.com/skot/ESP-Miner/blob/master/components/asic/serial.c
 */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "driver/uart.h"
 
@@ -23,8 +23,7 @@ https://github.com/skot/ESP-Miner/blob/master/components/asic/serial.c
 
 static const char *TAG = "serial";
 
-void SERIAL_init(void)
-{
+void SERIAL_init(void) {
     ESP_LOGI(TAG, "Initializing serial");
     // Configure UART1 parameters
     uart_config_t uart_config = {
@@ -46,7 +45,6 @@ void SERIAL_init(void)
     uart_driver_install(UART_NUM_1, BUF_SIZE * 2, BUF_SIZE * 2, 0, NULL, 0);
 }
 
-int SERIAL_send(uint8_t *data, int len, bool debug)
-{
-    return uart_write_bytes(UART_NUM_1, (const char *)data, len);
-}
+int SERIAL_send(uint8_t *data, int len, bool debug) { return uart_write_bytes(UART_NUM_1, (const char *)data, len); }
+
+void SERIAL_clear_buffer(void) { uart_flush(UART_NUM_1); }
