@@ -1,8 +1,15 @@
 #ifndef ASIC_COMPONENT_H
 #define ASIC_COMPONENT_H
+#include "sdkconfig.h"
 #include <stdint.h>
 
 #define WORK_SIZE 82
+
+#ifdef CONFIG_SCALE_TRUEDIFF
+static const uint32_t TRUEDIFFONE[8] = {0x00FFFFFF, 0, 0, 0, 0, 0, 0, 0};
+#else
+static const uint32_t TRUEDIFFONE[8] = {0, 0xFFFF0000, 0, 0, 0, 0, 0, 0};
+#endif
 
 /**
  * Data structure to store parsed ASIC results.

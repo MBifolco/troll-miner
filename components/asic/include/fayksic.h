@@ -1,7 +1,6 @@
 #ifndef FAYKSIC_H_
 #define FAYKSIC_H_
 
-#include "common.h"
 #include "driver/gpio.h"
 #include "job.h"
 #include <stdint.h>

@@ -24,7 +24,16 @@
     "fayksic.h": "c",
     "asic.h": "c",
     "diff_utils.h": "c",
-    "array": "c"
+    "array": "c",
+    "utils.h": "c",
+    "bitset": "c",
+    "string": "c",
+    "vector": "c",
+    "memory": "c",
+    "optional": "c",
+    "string_view": "c",
+    "system_error": "c",
+    "variant": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"

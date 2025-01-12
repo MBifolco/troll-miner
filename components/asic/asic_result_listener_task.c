@@ -20,7 +20,6 @@ void asic_result_listener_task(void *pvParameters) {
     uint8_t buf[BUFF_SIZE];
 
     while (1) {
-        // TODO: 10s timeout - that seems like...alot?
         int bytes_read = uart_read_bytes(UART_NUM_1, buf, BUFF_SIZE, 10000 / portTICK_PERIOD_MS);
         if (bytes_read < 0) {
             ESP_LOGE(TAG, "UART error reading data");

@@ -46,6 +46,11 @@ void app_main() {
     // initialize serial connection to asic
     SERIAL_init();
 
+    /**
+     * TODO: Is there some start/warm up signals that could be sent to the ASIC?
+     * No point in doing anything else until we know they're available and ready to work
+     */
+
     // Start the pool task to listen to pool
     xTaskCreate(pt, "pool_task", 4096, NULL, 5, NULL);
 

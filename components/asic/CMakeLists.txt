@@ -3,8 +3,9 @@ SRCS
     "asic_request_task.c"
     "asic_result_listener_task.c"
     "fayksic.c"
+    "fayksic_result.c"
     "crc.c"
-    "common.c"
+   
     "serial.c"
     "diff_utils.c"
 
@@ -19,4 +20,5 @@ REQUIRES
     "freertos"
     "driver"
     "json"
+    "mbedtls"
 )
