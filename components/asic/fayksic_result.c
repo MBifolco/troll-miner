@@ -4,13 +4,19 @@
 #include "mbedtls/sha256.h"
 #include "stratum.h"
 #include "utils.h"
+#include <math.h>
 #include <stdint.h>
 
 #define RELATIVE_DIFF_NUMERATOR (((uint64_t)TRUEDIFFONE[0] << 32) | TRUEDIFFONE[1])
 
 static const char *TAG = "FAYKSIC:RESULT";
+static uint64_t MAX_DIFF = 0;
 
 static void print_relative_diff(uint64_t r) {
+    if (r > MAX_DIFF) {
+        MAX_DIFF = r;
+    }
+
     const char *suffixes = "\0KMGTP"; // null for values < 1K
     int suffix_index = 0;
     double scaled_r = (double)r;
@@ -21,8 +27,8 @@ static void print_relative_diff(uint64_t r) {
         suffix_index++;
     }
 
-    // Format the value with one decimal point and the suffix
-    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu", scaled_r, suffixes[suffix_index], STRATUM.session.difficulty);
+    scaled_r = floor(scaled_r * 10) / 10.0;
+    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu (max: %llu)", scaled_r, suffixes[suffix_index], STRATUM.session.difficulty, MAX_DIFF);
 }
 
 void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
