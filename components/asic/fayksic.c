@@ -72,6 +72,7 @@ static void _send(uint8_t header, uint8_t *data, uint8_t data_len, bool debug) {
     ESP_LOGI(TAG, "Sending %d bytes", total_length);
     prettyHex(buf, total_length);
     printf("\n");
+
     SERIAL_send(buf, total_length, debug);
 
     free(buf);
@@ -89,10 +90,11 @@ void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     work[1] = 0x01; // Set the number of midstates (assuming fixed value)
     memcpy(work + 2, block_header, BLOCK_HEADER_SIZE);
 
-    // Log the job being sent
-    ESP_LOGI(TAG, "Send Job: %02X", work[0]);
+    // Log the work being sent
+    ESP_LOGI(TAG, "Send work ID: %02X", work[0]);
     prettyHex(work, WORK_SIZE);
     printf("\n");
+
     // Send the work to the ASIC
     _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
 }
@@ -142,4 +144,15 @@ void send_job_difficulty(uint32_t difficulty) {
     printf("\n");
 
     _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 10, false);
+}
+
+void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
+    struct asic_result asic_result;
+    asic_result.nonce = (uint32_t)asic_res_buffer[2];
+    asic_result.nonce |= ((uint32_t)asic_res_buffer[3] << 8);
+    asic_result.nonce |= ((uint32_t)asic_res_buffer[4] << 16);
+    asic_result.nonce |= ((uint32_t)asic_res_buffer[5] << 24);
+
+    const char *t = "Fayksic:parse_result";
+    ESP_LOGI(t, "Nonce: 0x%08lx", asic_result.nonce);
 }
