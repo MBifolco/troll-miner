@@ -28,7 +28,7 @@ struct stats {
      */
     uint32_t total_shares;
     time_t start_time;
-    time_t uptime;
+    double uptime;
     double ema_5s;
     double ema_1m;
     double ema_5m;
@@ -38,14 +38,15 @@ struct stats {
 
 struct stats STATS;
 
-static void print_hash_rate() {
+static void calc_hash_rate() {
     time_t current_time = time(NULL);
+
+    // Assumes calc_hash_rate only gets called on successful share
     STATS.total_shares++;
 
     if (STATS.start_time == 0) {
         STATS.start_time = current_time;
     } else {
-        // Assumes this only gets called on successful share
         STATS.uptime = difftime(current_time, STATS.start_time);
         STATS.avg_rate = STATS.total_shares / STATS.uptime;
     }
@@ -86,9 +87,9 @@ static void print_stats(uint64_t r) {
     double hash_rate_15m = STATS.ema_15m * STRATUM.session.difficulty;
     double hash_rate_avg = STATS.avg_rate * STRATUM.session.difficulty;
     scaled_r = floor(scaled_r * 10) / 10.0;
-    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu", scaled_r, suffixes[suffix_index], STRATUM.session.difficulty);
-    ESP_LOGI(TAG, "Stats: Max diff(%llu) -- hash rate: %.2f/%.2f/%.2f/%.2f/%.2f", STATS.max_diff, hash_rate_5s, hash_rate_1m, hash_rate_5m,
-             hash_rate_15m, hash_rate_avg);
+    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu -- Max diff(%llu) -- hash rates: %.2f/%.2f/%.2f/%.2f/%.2f -- uptime %.0f", scaled_r,
+             suffixes[suffix_index], STRATUM.session.difficulty, STATS.max_diff, hash_rate_5s, hash_rate_1m, hash_rate_5m, hash_rate_15m,
+             hash_rate_avg, STATS.uptime);
 }
 
 void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
@@ -107,7 +108,7 @@ void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
      *
      * Also - these should only be run when a share is accepted
      */
-    print_hash_rate();
+    calc_hash_rate();
 
     struct block_header bh = build_block_header(CURRENT_JOB);
     bh.bytes[BLOCK_HEADER_SIZE - 1] = asic_res_buffer[2];
