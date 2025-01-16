@@ -82,26 +82,13 @@ free_from_prefix:
     return ret;
 }
 
-struct job *construct_job(mining_notify *notify) {
-    struct job *j = malloc(sizeof(struct job));
-    if (j == NULL) {
-        ESP_LOGE(TAG, "job malloc failed");
-        return NULL;
-    }
-
+void construct_job(mining_notify *notify, struct job *j) {
     memcpy(j->previous_block_hash, notify->prev_block_hash, HASH_SIZE);
     j->nbits = notify->nbits;
     j->version = notify->version;
     j->time = notify->time;
     j->nonce = 0;
 
-    j->extranonce2_len = 2; // TODO: This comes from mining.subscribe
-    j->extranonce2 = malloc(j->extranonce2_len);
-    if (j->extranonce2 == NULL) {
-        ESP_LOGE(TAG, "extranonce2 allocation failed");
-        free(j);
-        return NULL;
-    }
     // TODO: Doesn't start at 0x0602
     j->extranonce2[0] = 0x06;
     j->extranonce2[1] = 0x02;
@@ -110,9 +97,7 @@ struct job *construct_job(mining_notify *notify) {
     uint8_t coinbase_tx_id[HASH_SIZE];
     bool res = build_coinbase_tx_id(coinbase_tx_id, notify, extranonce1, j);
     if (res == false) {
-        free(j->extranonce2);
-        free(j);
-        return NULL;
+        return;
     }
 
     print_hex(coinbase_tx_id, HASH_SIZE, HASH_SIZE, "Coinbase tx ID: ");
@@ -130,8 +115,6 @@ struct job *construct_job(mining_notify *notify) {
         memcpy(concatenated_branches, j->merkle_tree_root, HASH_SIZE);
     }
     print_hex(j->merkle_tree_root, HASH_SIZE, HASH_SIZE, "Merkle Tree Root: ");
-
-    return j;
 }
 
 void copy_4bytes_to_block_header(uint8_t *bh, uint32_t n, uint8_t idx) {
@@ -154,8 +137,7 @@ struct block_header build_block_header(struct job *j) {
     memcpy(bh.bytes + merkle_tree_root_offest, j->merkle_tree_root, HASH_SIZE);
     copy_4bytes_to_block_header(bh.bytes, j->time, time_offset);
     copy_4bytes_to_block_header(bh.bytes, j->nbits, nbits_offset);
-    copy_4bytes_to_block_header(bh.bytes, (uint32_t)0x0f2b5710, nonce_offset); // TODO: Should start @ 0
-    print_hex(bh.bytes, BLOCK_HEADER_SIZE, 160, "Block Header: ");
+    copy_4bytes_to_block_header(bh.bytes, (uint32_t)0x00000000, nonce_offset);
     return bh;
 }
 

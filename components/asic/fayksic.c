@@ -145,14 +145,3 @@ void send_job_difficulty(uint32_t difficulty) {
 
     _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 10, false);
 }
-
-void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
-    struct asic_result asic_result;
-    asic_result.nonce = (uint32_t)asic_res_buffer[2];
-    asic_result.nonce |= ((uint32_t)asic_res_buffer[3] << 8);
-    asic_result.nonce |= ((uint32_t)asic_res_buffer[4] << 16);
-    asic_result.nonce |= ((uint32_t)asic_res_buffer[5] << 24);
-
-    const char *t = "Fayksic:parse_result";
-    ESP_LOGI(t, "Nonce: 0x%08lx", asic_result.nonce);
-}

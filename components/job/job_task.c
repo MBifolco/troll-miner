@@ -12,6 +12,7 @@
 #include <string.h>
 
 static const char *TAG = "JOB";
+struct job *CURRENT_JOB;
 
 void log_notify(mining_notify *notify) {
     ESP_LOGI(TAG, "Received job from queue: %p", notify);
@@ -36,25 +37,42 @@ void log_job(struct job *j) {
 void job_task(void *pvParameters) {
     ESP_LOGI(TAG, "Job task started");
 
+    /**
+     * TODO: Need a semaphore for CURRENT_JOB. When new jobs come in,
+     * we need a way to ensure we're not overwriting state that the
+     * asic_result task is in the middle of using.
+     */
+    CURRENT_JOB = malloc(sizeof(struct job));
+    if (CURRENT_JOB == NULL) {
+        ESP_LOGE(TAG, "CURRENT_JOB malloc failed");
+        return;
+    }
+
+    /**
+     * TODO: mining.subscribe server response does this allocation
+     * TODO: Check this operation was done; this is the (rare) case where we
+     * happen to get a mining.notify before a mining.subscribe response - we
+     * cannot send work to the ASIC if we don't know the extranonce2 info
+     */
+    CURRENT_JOB->extranonce2_len = 2; // TODO:
+    CURRENT_JOB->extranonce2 = malloc(CURRENT_JOB->extranonce2_len);
+    if (CURRENT_JOB->extranonce2 == NULL) {
+        ESP_LOGE(TAG, "CURRENT_JOB->extranonce2 allocation failed");
+        free(CURRENT_JOB);
+        return;
+    }
+
     mining_notify *notify;
 
     while (true) {
         // Wait to receive a message from the stratum_to_job_queue
         if (xQueueReceive(stratum_to_job_queue, &notify, portMAX_DELAY) == pdPASS) {
             log_notify(notify);
-            struct job *j = construct_job(notify);
+            construct_job(notify, CURRENT_JOB);
             free_notify(notify);
 
-            if (j == NULL) {
-                ESP_LOGE(TAG, "Failed to allocate memory for mining_work");
-                vTaskDelay(pdMS_TO_TICKS(10));
-                continue;
-            }
-
-            log_job(j);
-            struct block_header bh = build_block_header(j);
-            free(j->extranonce2);
-            free(j);
+            log_job(CURRENT_JOB);
+            struct block_header bh = build_block_header(CURRENT_JOB);
 
             if (xQueueSend(work_to_asic_queue, &bh.bytes, portMAX_DELAY) != pdPASS) {
                 printf("Failed to send mining_work to queue!\n");
@@ -68,5 +86,5 @@ void job_task(void *pvParameters) {
         // Yield to let other tasks run
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-    // free mining_notify
+    free(CURRENT_JOB);
 }

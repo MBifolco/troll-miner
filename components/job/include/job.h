@@ -25,10 +25,12 @@ struct block_header {
     uint8_t bytes[BLOCK_HEADER_SIZE];
 };
 
+extern struct job *CURRENT_JOB;
+
 void job_task(void *pvParameters);
 uint8_t *coinbase_section_to_bytes(char *coinbase_str);
 bool build_coinbase_tx_id(uint8_t *cb_tx_id, mining_notify *notify, char *extranonce1, struct job *j);
-struct job *construct_job(mining_notify *notify);
+void construct_job(mining_notify *notify, struct job *j);
 void copy_4bytes_to_block_header(uint8_t *bh, uint32_t n, uint8_t idx);
 struct block_header build_block_header(struct job *j);
 void free_notify(mining_notify *notify);
