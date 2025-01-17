@@ -25,8 +25,6 @@ void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
      *
      * Also - these should only be run when a share is accepted
      */
-    // calc_hash_rate();
-
     struct block_header bh = build_block_header(CURRENT_JOB);
     bh.bytes[BLOCK_HEADER_SIZE - 1] = asic_res_buffer[2];
     bh.bytes[BLOCK_HEADER_SIZE - 2] = asic_res_buffer[3];
