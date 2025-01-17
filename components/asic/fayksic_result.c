@@ -2,95 +2,12 @@
 #include "esp_log.h"
 #include "job.h"
 #include "mbedtls/sha256.h"
+#include "stats.h"
 #include "stratum.h"
 #include "utils.h"
-#include <math.h>
 #include <stdint.h>
-#include <time.h>
-
-#define RELATIVE_DIFF_NUMERATOR (((uint64_t)TRUEDIFFONE[0] << 32) | TRUEDIFFONE[1])
-#define CALC_EMA(alpha, current, ema) ((ema == 0.0) ? current : (alpha * current + (1 - alpha) * ema))
 
 static const char *TAG = "FAYKSIC:RESULT";
-static const double alpha_5s = 1.0 / (5.0 + 1.0);
-static const double alpha_1m = 1.0 / (60.0 + 1.0);
-static const double alpha_5m = 1.0 / (5 * 60.0 + 1.0);
-static const double alpha_15m = 1.0 / (15 * 60.0 + 1.0);
-
-struct stats {
-    uint64_t max_diff;
-
-    /* Hash rates*/
-    time_t last_share_time;
-
-    /**
-     * Use cgminer pattern of averages
-     */
-    uint32_t total_shares;
-    time_t start_time;
-    double uptime;
-    double ema_5s;
-    double ema_1m;
-    double ema_5m;
-    double ema_15m;
-    double avg_rate;
-};
-
-struct stats STATS;
-
-static void calc_hash_rate() {
-    time_t current_time = time(NULL);
-
-    // Assumes calc_hash_rate only gets called on successful share
-    STATS.total_shares++;
-
-    if (STATS.start_time == 0) {
-        STATS.start_time = current_time;
-    } else {
-        STATS.uptime = difftime(current_time, STATS.start_time);
-        STATS.avg_rate = STATS.total_shares / STATS.uptime;
-    }
-
-    // If this isn't the first share, calculate elapsed time and current rate
-    if (STATS.last_share_time > 0) {
-        double elapsed_time = difftime(current_time, STATS.last_share_time);
-        if (elapsed_time > 0) {
-            double current_rate = 1.0 / elapsed_time; // Shares per second
-            STATS.ema_5s = CALC_EMA(alpha_5s, current_rate, STATS.ema_5s);
-            STATS.ema_1m = CALC_EMA(alpha_1m, current_rate, STATS.ema_1m);
-            STATS.ema_5m = CALC_EMA(alpha_5m, current_rate, STATS.ema_5m);
-            STATS.ema_15m = CALC_EMA(alpha_15m, current_rate, STATS.ema_15m);
-        }
-    }
-
-    STATS.last_share_time = current_time;
-}
-
-static void print_stats(uint64_t r) {
-    if (r > STATS.max_diff) {
-        STATS.max_diff = r;
-    }
-
-    const char *suffixes = "\0KMGTP"; // null for values < 1K
-    int suffix_index = 0;
-    double scaled_r = (double)r;
-
-    // Scale down the value until it's below 1000, updating the suffix
-    while (scaled_r >= 1000 && suffix_index < 5) {
-        scaled_r /= 1000.0;
-        suffix_index++;
-    }
-
-    double hash_rate_5s = STATS.ema_5s * STRATUM.session.difficulty;
-    double hash_rate_1m = STATS.ema_1m * STRATUM.session.difficulty;
-    double hash_rate_5m = STATS.ema_5m * STRATUM.session.difficulty;
-    double hash_rate_15m = STATS.ema_15m * STRATUM.session.difficulty;
-    double hash_rate_avg = STATS.avg_rate * STRATUM.session.difficulty;
-    scaled_r = floor(scaled_r * 10) / 10.0;
-    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu -- Max diff(%llu) -- hash rates: %.2f/%.2f/%.2f/%.2f/%.2f -- uptime %.0f", scaled_r,
-             suffixes[suffix_index], STRATUM.session.difficulty, STATS.max_diff, hash_rate_5s, hash_rate_1m, hash_rate_5m, hash_rate_15m,
-             hash_rate_avg, STATS.uptime);
-}
 
 void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
     struct asic_result asic_result;
@@ -108,7 +25,7 @@ void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
      *
      * Also - these should only be run when a share is accepted
      */
-    calc_hash_rate();
+    // calc_hash_rate();
 
     struct block_header bh = build_block_header(CURRENT_JOB);
     bh.bytes[BLOCK_HEADER_SIZE - 1] = asic_res_buffer[2];
@@ -134,6 +51,12 @@ void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
         denominator = (denominator << 8) | h[i];
     }
 
+    /**
+     * TODO: when truediffone is not scaled down for ease, relative diff is always 0?
+     */
     uint64_t relative_diff = numerator / denominator;
-    print_stats(relative_diff);
+    update_stats(relative_diff);
+    struct scaled_value v = scale_value(relative_diff);
+    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu", v.v, v.suffix, STRATUM.session.difficulty);
+    print_stats();
 }

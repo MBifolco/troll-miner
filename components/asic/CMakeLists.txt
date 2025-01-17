@@ -13,6 +13,7 @@ INCLUDE_DIRS
     "include"
     "../job/include"
     "../../main/"
+    "../stats/include"
     "../stratum/include"
     "../utils/include"
 
