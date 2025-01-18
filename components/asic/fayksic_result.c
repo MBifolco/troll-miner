@@ -2,34 +2,12 @@
 #include "esp_log.h"
 #include "job.h"
 #include "mbedtls/sha256.h"
+#include "stats.h"
 #include "stratum.h"
 #include "utils.h"
-#include <math.h>
 #include <stdint.h>
 
-#define RELATIVE_DIFF_NUMERATOR (((uint64_t)TRUEDIFFONE[0] << 32) | TRUEDIFFONE[1])
-
 static const char *TAG = "FAYKSIC:RESULT";
-static uint64_t MAX_DIFF = 0;
-
-static void print_relative_diff(uint64_t r) {
-    if (r > MAX_DIFF) {
-        MAX_DIFF = r;
-    }
-
-    const char *suffixes = "\0KMGTP"; // null for values < 1K
-    int suffix_index = 0;
-    double scaled_r = (double)r;
-
-    // Scale down the value until it's below 1000, updating the suffix
-    while (scaled_r >= 1000 && suffix_index < 5) {
-        scaled_r /= 1000.0;
-        suffix_index++;
-    }
-
-    scaled_r = floor(scaled_r * 10) / 10.0;
-    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu (max: %llu)", scaled_r, suffixes[suffix_index], STRATUM.session.difficulty, MAX_DIFF);
-}
 
 void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
     struct asic_result asic_result;
@@ -44,6 +22,8 @@ void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
      *
      * NOTE: These string conversions, prints, and hash calculations are unncessary I/O and
      * should be removed when we get to prime time - it's expensive
+     *
+     * Also - these should only be run when a share is accepted
      */
     struct block_header bh = build_block_header(CURRENT_JOB);
     bh.bytes[BLOCK_HEADER_SIZE - 1] = asic_res_buffer[2];
@@ -69,6 +49,12 @@ void parse_result(uint8_t *asic_res_buffer, int buffer_size) {
         denominator = (denominator << 8) | h[i];
     }
 
+    /**
+     * TODO: when truediffone is not scaled down for ease, relative diff is always 0?
+     */
     uint64_t relative_diff = numerator / denominator;
-    print_relative_diff(relative_diff);
+    update_stats(relative_diff);
+    struct scaled_value v = scale_value(relative_diff);
+    ESP_LOGI(TAG, "Diff result: %.1f%c/%lu", v.v, v.suffix, STRATUM.session.difficulty);
+    print_stats();
 }

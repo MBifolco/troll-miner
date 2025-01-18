@@ -35,14 +35,17 @@ void generate_target_mask(uint32_t input[2], uint32_t result[2]) {
         return;
     }
 
+    /**
+     * TODO: This desperately needs unit tests, especially for the edge cases...
+     */
     if (msb_position < 32) {
-        result[1] = 0;
-        result[0] = (1U << (msb_position + 1)) - 1;
-        if (msb_position == 31) {
-            result[0]--;
-        }
+        result[0] = 0;
+        result[1] = (1U << msb_position) - 1;
+        // if (msb_position == 32) {
+        //     result[0]--;
+        // }
     } else {
-        result[1] = (1U << ((msb_position - 32) + 1)) - 1;
-        result[0] = 0xFFFFFFFF;
+        result[0] = (1U << ((msb_position - 33) + 1)) - 1;
+        result[1] = 0xFFFFFFFF;
     }
 }

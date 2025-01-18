@@ -127,15 +127,15 @@ void send_job_difficulty(uint32_t difficulty) {
     generate_target_mask(result, target_mask);
     ESP_LOGI(TAG, "Provided difficulty: %lu", difficulty);
     ESP_LOGI(TAG, "Result: 0x%08lx%08lx", result[0], result[1]);
-    ESP_LOGI(TAG, "Mask:   0x%08lx%08lx", target_mask[1], target_mask[0]);
+    ESP_LOGI(TAG, "Mask:   0x%08lx%08lx", target_mask[0], target_mask[1]);
 
     // TODO: Reverse the bits?
     // 2 for command, 8 for target mask
     uint8_t job_difficulty_mask[10];
     job_difficulty_mask[0] = 0x00;
     job_difficulty_mask[1] = TICKET_MASK;
-    split_uint32_to_bytes(target_mask[1], job_difficulty_mask, 2);
-    split_uint32_to_bytes(target_mask[0], job_difficulty_mask, 6);
+    split_uint32_to_bytes(target_mask[0], job_difficulty_mask, 2);
+    split_uint32_to_bytes(target_mask[1], job_difficulty_mask, 6);
 
     ESP_LOGI(TAG, "ASIC difficulty mask payload: ");
     for (int i = 0; i < 10; i++) {

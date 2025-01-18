@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.16)
 set(EXTRA_COMPONENT_DIRS "../components")
 
 set(TEST_COMPONENTS "stratum" CACHE STRING "List of components to test")
+list(APPEND TEST_COMPONENTS "asic")
 #list(APPEND TEST_COMPONENTS "other_component")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

@@ -33,7 +33,12 @@
     "optional": "c",
     "string_view": "c",
     "system_error": "c",
-    "variant": "c"
+    "variant": "c",
+    "random": "c",
+    "stratum.h": "c",
+    "stats.h": "c",
+    "stdint.h": "c",
+    "functional": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
