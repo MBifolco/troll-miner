@@ -37,7 +37,8 @@
     "random": "c",
     "stratum.h": "c",
     "stats.h": "c",
-    "stdint.h": "c"
+    "stdint.h": "c",
+    "functional": "c"
   },
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
