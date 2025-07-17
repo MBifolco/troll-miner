@@ -17,9 +17,9 @@ https://github.com/skot/ESP-Miner/blob/master/components/asic/serial.c
 #include "serial.h"
 #include "utils.h"
 
-#define ECHO_TEST_TXD (13)
-#define ECHO_TEST_RXD (12)
-#define BUF_SIZE (1024)
+#define ECHO_TEST_TXD (7)
+#define ECHO_TEST_RXD (6)
+#define BUF_SIZE (2048)
 
 static const char *TAG = "serial";
 
@@ -28,7 +28,7 @@ void SERIAL_init(void)
     ESP_LOGI(TAG, "Initializing serial");
     // Configure UART1 parameters
     uart_config_t uart_config = {
-        .baud_rate = 115200,
+            .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,

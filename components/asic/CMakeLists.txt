@@ -1,10 +1,13 @@
 idf_component_register(
 SRCS
     "asic_request_task.c"
-    "fayksic.c"
+    "asic_response_task.c"
+    #"fayksic.c"
     "crc.c"
     "common.c"
     "serial.c"
+    "bm1366.c"
+    "frequency_transition.c"
 
 INCLUDE_DIRS 
     "include"

@@ -1,11 +1,12 @@
 #include "asic.h"
+#include "asic_response_task.h"
 #include "esp_log.h"
 #include "job.h"
 #include "pool.h"
 #include "queue_handles.h"
 #include "stratum_message.h"
 #include "wifi_connection.h"
-
+#include "driver/uart.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
@@ -17,7 +18,8 @@
 #include "serial.h"
 #include "stratum_message.h"
 #include "wifi_connection.h"
-
+#include "bm1366.h"
+#include <unistd.h>
 QueueHandle_t stratum_to_job_queue;
 QueueHandle_t work_to_asic_queue;
 
@@ -35,6 +37,7 @@ void app_main() {
     wifi_wait_for_connection();
 #endif
     // Initialize the pool component
+    /*
     pool_init();
 
     // Create the queues
@@ -45,10 +48,15 @@ void app_main() {
         printf("Failed to create queues!\n");
         return;
     }
-
+    */
     // initialize serial connection to asic
+    ESP_LOGI("AppInit", "Initializing serial connection to ASIC");
     SERIAL_init();
 
+    // Initialize the ASIC
+    ESP_LOGI("AppInit", "Initializing ASIC");
+    asic_init(1, 1, 1);
+    /*
     // Start the pool task to listen to pool
     xTaskCreate(pt, "pool_task", 4096, NULL, 5, NULL);
 
@@ -57,4 +65,8 @@ void app_main() {
 
     // Start the asic task to listen to work and send to asic
     xTaskCreate((TaskFunction_t)asic_task, "asic_task", 4096, NULL, 5, NULL);
+    */
+
+   // Start the asic response task to listen to asic
+    xTaskCreate((TaskFunction_t)asic_response_task, "asic_response_task", 4096, NULL, 5, NULL);
 }
