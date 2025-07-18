@@ -1,6 +1,6 @@
 #include "asic.h"
 #include "esp_log.h"
-#include "fayksic.h"
+#include "bm1366.h"
 #include "job.h"
 #include "queue_handles.h"
 #include "utils.h"

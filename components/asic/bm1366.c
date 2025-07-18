@@ -100,7 +100,7 @@ void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]) {
     ESP_LOGI(TAG, "Send Job: %02X", work[0]);
     prettyHex(work, WORK_SIZE);
     // Send the work to the ASIC
-    _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, false);
+    _send((TYPE_JOB | GROUP_SINGLE | CMD_WRITE), work, WORK_SIZE, true);
 }
 
 void send_job_difficulty(int difficulty)
@@ -127,9 +127,9 @@ void send_job_difficulty(int difficulty)
         job_difficulty_mask[5 - i] = _reverse_bits(value);
     }
 
-    ESP_LOGI(TAG, "Setting job ASIC mask to %d", difficulty);
+    ESP_LOGI(TAG, "Setting job ASIC difficulty to %d", difficulty);
 
-    _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 6, false);
+    _send((TYPE_CMD | GROUP_ALL | CMD_WRITE), job_difficulty_mask, 6, true);
 }
 
 void set_version_mask(uint32_t version_mask) 
@@ -138,6 +138,7 @@ void set_version_mask(uint32_t version_mask)
     uint8_t version_byte0 = (versions_to_roll >> 8);
     uint8_t version_byte1 = (versions_to_roll & 0xFF); 
     uint8_t version_cmd[] = {0x00, 0xA4, 0x90, 0x00, version_byte0, version_byte1};
+    ESP_LOGI(TAG, "Setting ASIC version mask to %d", version_mask);
     _send(TYPE_CMD | GROUP_ALL | CMD_WRITE, version_cmd, 6, SERIALTX_DEBUG);
 }
 
@@ -240,8 +241,6 @@ static void do_frequency_ramp_up(float target_frequency) {
 
 int asic_init()
 {
-    sleep(3); // Pause for 3 seconds
-
     ESP_LOGI(TAG, "Set version mask to %d", STRATUM_DEFAULT_VERSION_MASK);
     // set version mask
     for (int i = 0; i < 3; i++) {
@@ -309,7 +308,7 @@ int asic_init()
         _send((TYPE_CMD | GROUP_SINGLE | CMD_WRITE), set_3c_register_third, 6, SERIALTX_DEBUG);
     }
 
-    //do_frequency_ramp_up(250.0);
+    do_frequency_ramp_up(250.0);
 
     unsigned char set_10_hash_counting[6] = {0x00, 0x10, 0x00, 0x00, 0x15, 0x1C}; //S19XP-Stock Default
     // unsigned char set_10_hash_counting[6] = {0x00, 0x10, 0x00, 0x0F, 0x00, 0x00}; //supposedly the "full" 32bit nonce range

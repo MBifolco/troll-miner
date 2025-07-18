@@ -13,7 +13,7 @@ https://github.com/skot/ESP-Miner/blob/master/components/asic/serial.c
 #include "esp_log.h"
 #include "soc/uart_struct.h"
 
-#include "fayksic.h"
+#include "bm1366.h"
 #include "serial.h"
 #include "utils.h"
 

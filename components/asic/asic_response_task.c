@@ -1,6 +1,6 @@
 #include "asic_response_task.h"
 #include "esp_log.h"
-#include "fayksic.h"
+#include "bm1366.h"
 #include "job.h"
 #include "queue_handles.h"
 #include "utils.h"
@@ -41,7 +41,7 @@ void asic_response_task(void *pvParameters) {
             ESP_LOGD(TAG, "No data received within timeout");
         }
          // Yield to let other tasks run
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     free(data); // Clean up the buffer (though this point won't be reached in an infinite loop)

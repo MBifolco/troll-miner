@@ -3,7 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "queue_handles.h"
-#include "fayksic.h"
+#include "bm1366.h"
 #include "utils.h"
 #include <inttypes.h>
 #include <stdio.h>
