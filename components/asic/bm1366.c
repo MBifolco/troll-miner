@@ -5,6 +5,7 @@
 #include "serial.h"
 #include "utils.h"
 #include "frequency_transition.h"
+#include "common.h"
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -33,7 +34,10 @@
 #define TICKET_MASK 0x14
 #define MISC_CONTROL 0x18
 
-static const char *TAG = "Fayksic";
+#define CHIP_ID 0x1366
+#define CHIP_ID_RESPONSE_LENGTH 11
+
+static const char *TAG = "BM1366";
 static uint8_t id = 0;
 
 /// @brief
@@ -234,7 +238,7 @@ static void do_frequency_ramp_up(float target_frequency) {
     do_frequency_transition(target_frequency, send_hash_frequency, 1366);
 }
 
-void asic_init()
+int asic_init()
 {
     sleep(3); // Pause for 3 seconds
 
@@ -248,7 +252,14 @@ void asic_init()
     unsigned char init3[7] = {0x55, 0xAA, 0x52, 0x05, 0x00, 0x00, 0x0A};
     SERIAL_send(init3, 7, true);
 
-     unsigned char init4[11] = {0x55, 0xAA, 0x51, 0x09, 0x00, 0xA8, 0x00, 0x07, 0x00, 0x00, 0x03};
+    int chip_counter = count_asic_chips(1, CHIP_ID, CHIP_ID_RESPONSE_LENGTH);
+
+    if (chip_counter == 0) {
+        return 0;
+    }
+
+
+    unsigned char init4[11] = {0x55, 0xAA, 0x51, 0x09, 0x00, 0xA8, 0x00, 0x07, 0x00, 0x00, 0x03};
     SERIAL_send(init4, 11, true);
 
     unsigned char init5[11] = {0x55, 0xAA, 0x51, 0x09, 0x00, 0x18, 0xFF, 0x0F, 0xC1, 0x00, 0x00};
@@ -298,7 +309,7 @@ void asic_init()
         _send((TYPE_CMD | GROUP_SINGLE | CMD_WRITE), set_3c_register_third, 6, SERIALTX_DEBUG);
     }
 
-    do_frequency_ramp_up(250.0);
+    //do_frequency_ramp_up(250.0);
 
     unsigned char set_10_hash_counting[6] = {0x00, 0x10, 0x00, 0x00, 0x15, 0x1C}; //S19XP-Stock Default
     // unsigned char set_10_hash_counting[6] = {0x00, 0x10, 0x00, 0x0F, 0x00, 0x00}; //supposedly the "full" 32bit nonce range
@@ -306,4 +317,6 @@ void asic_init()
 
     unsigned char init795[11] = {0x55, 0xAA, 0x51, 0x09, 0x00, 0xA4, 0x90, 0x00, 0xFF, 0xFF, 0x1C};
     SERIAL_send(init795, 11, true);
+
+    return chip_counter;
 }

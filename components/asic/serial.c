@@ -50,3 +50,54 @@ int SERIAL_send(uint8_t *data, int len, bool debug)
 {
     return uart_write_bytes(UART_NUM_1, (const char *)data, len);
 }
+
+/// @brief waits for a serial response from the device
+/// @param buf buffer to read data into
+/// @param buf number of ms to wait before timing out
+/// @return number of bytes read, or -1 on error
+int16_t SERIAL_rx(uint8_t *buf, uint16_t size, uint16_t timeout_ms)
+{
+    int16_t bytes_read = uart_read_bytes(UART_NUM_1, buf, size, timeout_ms / portTICK_PERIOD_MS);
+
+    size_t buff_len = 0;
+    if (bytes_read > 0) {
+        uart_get_buffered_data_len(UART_NUM_1, &buff_len);
+        printf("rx: ");
+        prettyHex((unsigned char*) buf, bytes_read);
+        printf(" [%d]\n", buff_len);
+    }
+
+    return bytes_read;
+}
+
+void SERIAL_debug_rx(void)
+{
+    int ret;
+    uint8_t buf[100];
+
+    ret = SERIAL_rx(buf, 100, 20);
+    if (ret < 0)
+    {
+        fprintf(stderr, "unable to read data\n");
+        return;
+    }
+
+    memset(buf, 0, 100);
+}
+
+void SERIAL_clear_buffer(void)
+{
+    uart_flush(UART_NUM_1);
+}
+
+esp_err_t SERIAL_set_baud(int baud)
+{
+    ESP_LOGI(TAG, "Changing UART baud to %i", baud);
+
+    // Make sure that we are done writing before setting a new baudrate.
+    ESP_ERROR_CHECK_WITHOUT_ABORT(uart_wait_tx_done(UART_NUM_1, 1000 / portTICK_PERIOD_MS));
+
+    ESP_ERROR_CHECK_WITHOUT_ABORT(uart_set_baudrate(UART_NUM_1, baud));
+
+    return ESP_OK;
+}

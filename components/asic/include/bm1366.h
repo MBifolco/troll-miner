@@ -32,7 +32,7 @@ typedef enum {
     CMD_PACKET = 1,
 } packet_type_t;
 
-void asic_init();
+int asic_init();
 void set_version_mask(uint32_t version_mask);
 void send_work(uint8_t block_header[BLOCK_HEADER_SIZE]);
 void send_job_difficulty(int difficulty);

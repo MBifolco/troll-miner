@@ -12,5 +12,6 @@ typedef struct __attribute__((__packed__))
 
 unsigned char _reverse_bits(unsigned char num);
 int _largest_power_of_two(int num);
+int count_asic_chips(uint16_t asic_count, uint16_t chip_id, int chip_id_response_length);
 
 #endif
